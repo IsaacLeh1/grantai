@@ -78,6 +78,28 @@ function formatRubricLevelLabel(levelKey) {
   return levelKey.charAt(0).toUpperCase() + levelKey.slice(1);
 }
 
+function scoreForLevel(levelKey) {
+  const levelPointMap = {
+    exemplary: 4,
+    proficient: 3,
+    developing: 2,
+    beginning: 1,
+    small: 0.5,
+    zero: 0
+  };
+
+  return levelPointMap[levelKey] ?? 0;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 function addChatMessage(role, text) {
   const message = document.createElement("div");
   message.className = `msg ${role}`;
@@ -378,39 +400,57 @@ async function populateReviewForm(app) {
   currentRubric.criteria.forEach((criterion) => {
     const group = document.createElement("div");
     group.className = "criterion-input-group";
+    const proposalText = app.fullProposal || app.proposedIdeaSummary || "No proposal text was provided.";
     
-    // Build score options based on available levels
-    const levelKeys = Object.keys(criterion.levels || {});
-    const scoreOptions = [];
-    
-    // Map level names to point values
-    const levelPointMap = {
-      exemplary: 4,
-      proficient: 3,
-      developing: 2,
-      beginning: 1,
-      small: 0.5,
-      zero: 0
-    };
-    
-    levelKeys.forEach((key) => {
-      const points = levelPointMap[key] ?? 0;
-      const label = criterion.levels[key];
-      scoreOptions.push(`<option value="${points}">${label}</option>`);
-    });
+    const levelEntries = Object.entries(criterion.levels || {});
+    const scoreOptions = levelEntries
+      .map(([key, label]) => {
+        const points = scoreForLevel(key);
+        return `
+          <label class="score-choice">
+            <input type="checkbox" name="criterion-${criterion.id}" value="${points}" data-criterion-group="criterion-${criterion.id}">
+            <span class="score-choice-label">
+              <strong>${points} pts</strong>
+              <span>${formatRubricLevelLabel(key)}: ${label}</span>
+            </span>
+          </label>
+        `;
+      })
+      .join("");
     
     group.innerHTML = `
       <label class="criterion-label">${criterion.name}</label>
       <span class="criterion-description">${criterion.description}</span>
-      <div class="score-input-wrapper">
-        <select name="criterion-${criterion.id}" required>
-          <option value="">-- Select score --</option>
-          ${scoreOptions.join("")}
-        </select>
+      <div class="proposal-reference">
+        <span class="proposal-reference-label">Faculty proposal reference</span>
+        <p>${escapeHtml(proposalText)}</p>
+      </div>
+      <div class="score-choice-grid" data-criterion-group="criterion-${criterion.id}">
+        ${scoreOptions}
       </div>
     `;
     
     reviewCriteriaInputs.appendChild(group);
+  });
+
+  reviewCriteriaInputs.querySelectorAll('input[type="checkbox"][data-criterion-group]').forEach((checkbox) => {
+    checkbox.addEventListener("change", (event) => {
+      const target = event.currentTarget;
+      if (!(target instanceof HTMLInputElement) || !target.checked) {
+        return;
+      }
+
+      const groupName = target.dataset.criterionGroup;
+      if (!groupName) {
+        return;
+      }
+
+      reviewCriteriaInputs.querySelectorAll(`input[type="checkbox"][data-criterion-group="${groupName}"]`).forEach((item) => {
+        if (item !== target) {
+          item.checked = false;
+        }
+      });
+    });
   });
   
   // Scroll to form
@@ -431,12 +471,20 @@ if (reviewForm) {
     
     // Extract scores for each criterion
     currentRubric.criteria.forEach((criterion) => {
-      const fieldName = `criterion-${criterion.id}`;
-      const score = formData.get(fieldName);
-      if (score !== null && score !== "") {
-        scores[criterion.id] = parseFloat(score);
+      const checked = reviewForm.querySelector(`input[type="checkbox"][data-criterion-group="criterion-${criterion.id}"]:checked`);
+      if (checked) {
+        scores[criterion.id] = parseFloat(checked.value);
       }
     });
+
+    const missingCriteria = currentRubric.criteria
+      .filter((criterion) => scores[criterion.id] === undefined)
+      .map((criterion) => criterion.name);
+
+    if (missingCriteria.length > 0) {
+      alert(`Please select one score for each criterion before submitting. Missing: ${missingCriteria.join(", ")}`);
+      return;
+    }
     
     const reviewData = {
       applicationId: currentApplication.id,

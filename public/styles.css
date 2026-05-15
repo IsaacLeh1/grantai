@@ -126,6 +126,19 @@ h3 {
   scroll-margin-top: 1rem;
 }
 
+#review.phase {
+  background: linear-gradient(180deg, rgba(18, 76, 53, 0.08) 0%, rgba(255, 255, 255, 0.98) 28%);
+  border-color: rgba(18, 76, 53, 0.24);
+}
+
+#review h2 {
+  color: var(--brand);
+}
+
+#review > p {
+  color: var(--ink-soft);
+}
+
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -474,7 +487,7 @@ dialog::backdrop {
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 0.9rem;
-  background: rgba(255, 255, 255, 0.92);
+  background: linear-gradient(180deg, rgba(18, 76, 53, 0.03), rgba(255, 255, 255, 0.94));
 }
 
 .criterion-label {
@@ -490,19 +503,79 @@ dialog::backdrop {
   display: block;
 }
 
-.score-input-wrapper {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
+.proposal-reference {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem 0.8rem;
+  border: 1px solid rgba(18, 76, 53, 0.18);
+  border-radius: 10px;
+  background: rgba(18, 76, 53, 0.05);
 }
 
-.score-input-wrapper input {
-  width: 80px;
+.proposal-reference-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--brand);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-.score-input-wrapper select {
-  flex: 1;
-  min-width: 200px;
+.proposal-reference p {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.score-choice-grid {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.score-choice {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.7rem;
+  align-items: start;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.96);
+  cursor: pointer;
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+
+.score-choice:hover {
+  border-color: rgba(18, 76, 53, 0.35);
+  box-shadow: 0 8px 18px rgba(18, 76, 53, 0.08);
+  transform: translateY(-1px);
+}
+
+.score-choice input {
+  margin-top: 0.2rem;
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--brand);
+}
+
+.score-choice-label {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.score-choice-label strong {
+  color: var(--brand);
+}
+
+.score-choice-label span {
+  color: var(--ink);
+  font-size: 0.92rem;
+}
+
+.score-choice input:checked + .score-choice-label {
+  color: var(--brand);
 }
 
 @media (max-width: 700px) {
@@ -531,11 +604,11 @@ dialog::backdrop {
     grid-template-columns: 1fr;
   }
 
-  .score-input-wrapper {
-    flex-direction: column;
+  .score-choice {
+    grid-template-columns: auto 1fr;
   }
 
-  .score-input-wrapper select {
+  .score-choice-grid {
     width: 100%;
   }
 }
