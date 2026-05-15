@@ -255,6 +255,19 @@ function heuristicGradeProposal(proposalText, rubric, facultySubmission) {
       else score = 0;
       rationale = "Score based on the documented number of students impacted by AI integration.";
       improvement = "State the number of students impacted and describe how AI is used in the class.";
+      // capture evidence snippet if present
+      if (studentCount !== null) {
+        const m = (proposalText || "").match(/(\d{2,4}\s*(?:\+|students?|students impacted|student(?:s)?))/i);
+        if (m && m[0]) {
+          var evidenceSnippet = (proposalText || "");
+          const idx = evidenceSnippet.toLowerCase().indexOf(m[0].toLowerCase());
+          if (idx >= 0) {
+            const start = Math.max(0, idx - 40);
+            const end = Math.min(evidenceSnippet.length, idx + m[0].length + 40);
+            rationale = (evidenceSnippet.substring(start, end)).trim();
+          }
+        }
+      }
     }
 
     if (id === "qualitative-impact") {
@@ -263,6 +276,19 @@ function heuristicGradeProposal(proposalText, rubric, facultySubmission) {
       score = hits >= 5 ? 4 : hits >= 3 ? 3 : hits >= 2 ? 2 : hits >= 1 ? 1 : 0;
       rationale = "Score based on the depth of external organization engagement and practitioner interaction.";
       improvement = "Describe the organization, contact hours, student deliverables, and how the work is reviewed.";
+      // collect evidence snippet(s)
+      const qualMatches = [];
+      engagementSignals.forEach((signal) => {
+        const idx = proposalText.toLowerCase().indexOf(signal);
+        if (idx >= 0) {
+          const start = Math.max(0, idx - 40);
+          const end = Math.min(proposalText.length, idx + signal.length + 40);
+          qualMatches.push(proposalText.substring(start, end).trim());
+        }
+      });
+      if (qualMatches.length) {
+        rationale = qualMatches.join(' ... ');
+      }
     }
 
     if (id === "software-approvals-dx") {
@@ -273,6 +299,14 @@ function heuristicGradeProposal(proposalText, rubric, facultySubmission) {
       score = text.includes("already approved") || text.includes("approved by dx") ? 4 : strongHits >= 2 ? 2 : approvedHits >= 2 ? 2 : 0;
       rationale = "Score based on the software approval status and evidence of imminent DX approval.";
       improvement = "State whether DX has already approved the software or provide concrete evidence they are about to approve it.";
+      // evidence snippet
+      const dxMatch = /(?:already approved|approved by dx|dx approved|approval|license|licensed)/i.exec(proposalText);
+      if (dxMatch) {
+        const idx = proposalText.toLowerCase().indexOf(dxMatch[0].toLowerCase());
+        const start = Math.max(0, idx - 40);
+        const end = Math.min(proposalText.length, idx + dxMatch[0].length + 40);
+        rationale = proposalText.substring(start, end).trim();
+      }
     }
 
     if (id === "assessment-plan") {
@@ -281,6 +315,17 @@ function heuristicGradeProposal(proposalText, rubric, facultySubmission) {
       score = hits >= 5 ? 4 : hits >= 3 ? 2 : hits >= 2 ? 1 : 0;
       rationale = "Score based on how clearly the outcomes and assessment methods are defined.";
       improvement = "Add specific learning outcomes and describe how student learning will be measured.";
+      const assessSignals = ["outcome", "baseline", "post", "metric", "survey", "assessment", "durable skill", "method"];
+      const assessMatches = [];
+      assessSignals.forEach((signal) => {
+        const idx = proposalText.toLowerCase().indexOf(signal);
+        if (idx >= 0) {
+          const start = Math.max(0, idx - 40);
+          const end = Math.min(proposalText.length, idx + signal.length + 40);
+          assessMatches.push(proposalText.substring(start, end).trim());
+        }
+      });
+      if (assessMatches.length) rationale = assessMatches.join(' ... ');
     }
 
     if (id === "rapid-impact") {
@@ -291,6 +336,16 @@ function heuristicGradeProposal(proposalText, rubric, facultySubmission) {
       score = summerFallHits >= 2 ? 4 : summerFallHits >= 1 ? 3 : springHits >= 1 ? 0 : 0;
       rationale = "Score based on when students will experience the grant's benefits.";
       improvement = "Make the timing explicit and show whether impact starts in summer or fall 2026.";
+      const timingSignals = summerFallSignals.concat(springSignals);
+      for (const s of timingSignals) {
+        const idx = proposalText.toLowerCase().indexOf(s);
+        if (idx >= 0) {
+          const start = Math.max(0, idx - 40);
+          const end = Math.min(proposalText.length, idx + s.length + 40);
+          rationale = proposalText.substring(start, end).trim();
+          break;
+        }
+      }
     }
 
     if (id === "sustainability-plan") {
@@ -299,6 +354,16 @@ function heuristicGradeProposal(proposalText, rubric, facultySubmission) {
       score = hits >= 5 ? 4 : hits >= 2 ? 1 : 0;
       rationale = "Score based on whether the proposal explains how the work continues after the grant ends.";
       improvement = "State who will maintain the change and how ongoing costs will be covered.";
+      const sustMatches = [];
+      sustainSignals.forEach((signal) => {
+        const idx = proposalText.toLowerCase().indexOf(signal);
+        if (idx >= 0) {
+          const start = Math.max(0, idx - 40);
+          const end = Math.min(proposalText.length, idx + signal.length + 40);
+          sustMatches.push(proposalText.substring(start, end).trim());
+        }
+      });
+      if (sustMatches.length) rationale = sustMatches.join(' ... ');
     }
 
     return {
