@@ -449,7 +449,7 @@ async function gradeProposalAgainstRubric({ proposalText, rubric, facultySubmiss
     };
   }
 
-  const heuristic = heuristicGradeProposal(proposalText, rubric);
+  const heuristic = heuristicGradeProposal(proposalText, rubric, facultySubmission);
   return {
     grading: heuristic,
     report: buildGradingMarkdown(heuristic, facultySubmission),
