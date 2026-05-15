@@ -314,10 +314,25 @@ function heuristicGradeProposal(proposalText, rubric, facultySubmission) {
 
   // If an autofill variant was used, optionally boost scores for demos.
   const variant = facultySubmission && facultySubmission.autofillVariant ? String(facultySubmission.autofillVariant) : null;
+  const facultyText = facultySubmission ? String(Object.values(facultySubmission).join(" ")).toLowerCase() : "";
+  const facultyCountMatch = facultyText.match(/(\d{2,4})\s*(?:\+|students?|students impacted|student(?:s)?)/i);
+  const facultyStudentCount = facultyCountMatch ? Number(facultyCountMatch[1]) : null;
   if (variant === "A") {
     // Make variant A score around ~80% by setting three criteria high and others moderate.
     criteria.forEach((c) => {
-      if (c.id === "quantitative-impact" || c.id === "qualitative-impact" || c.id === "software-approvals-dx") {
+      if (c.id === "quantitative-impact") {
+        // Only award full quantitative credit if the faculty submission or proposal text documents student counts
+        if (facultyStudentCount !== null) {
+          if (facultyStudentCount >= 300) c.score = 4;
+          else if (facultyStudentCount >= 200) c.score = 3;
+          else if (facultyStudentCount >= 100) c.score = 2;
+          else if (facultyStudentCount >= 50) c.score = 1;
+          else if (facultyStudentCount >= 25) c.score = 0.5;
+          else c.score = 0;
+          c.rationale = c.rationale || "Score based on the documented number of students impacted by AI integration.";
+          c.improvement = c.improvement || "State the number of students impacted and describe how AI is used in the class.";
+        }
+      } else if (c.id === "qualitative-impact" || c.id === "software-approvals-dx") {
         c.score = 4;
         c.rationale = c.rationale || "Demo boost: evidence aligns strongly to this criterion.";
         c.improvement = c.improvement || "No immediate changes required for demo-quality submission.";
