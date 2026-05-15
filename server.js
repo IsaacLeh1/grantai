@@ -253,79 +253,41 @@ function heuristicGradeProposal(proposalText, rubric, facultySubmission) {
       else if (studentCount !== null && studentCount >= 50) score = 1;
       else if (studentCount !== null && studentCount >= 25) score = 0.5;
       else score = 0;
-      rationale = "Score based on the documented number of students impacted by AI integration.";
+      rationale = extractEvidenceLine(proposalText, ["students impacted", "students per term", "students", "student"]) || "No exact student-impact evidence found in the proposal.";
       improvement = "State the number of students impacted and describe how AI is used in the class.";
-      // capture evidence snippet if present
-      if (studentCount !== null) {
-        const m = (proposalText || "").match(/(\d{2,4}\s*(?:\+|students?|students impacted|student(?:s)?))/i);
-        if (m && m[0]) {
-          var evidenceSnippet = (proposalText || "");
-          const idx = evidenceSnippet.toLowerCase().indexOf(m[0].toLowerCase());
-          if (idx >= 0) {
-            const start = Math.max(0, idx - 40);
-            const end = Math.min(evidenceSnippet.length, idx + m[0].length + 40);
-            rationale = (evidenceSnippet.substring(start, end)).trim();
-          }
-        }
-      }
     }
 
     if (id === "qualitative-impact") {
       const engagementSignals = ["external organization", "practitioner", "site visit", "guest critique", "consultation", "deliverable", "contact hours"];
       const hits = engagementSignals.filter((signal) => text.includes(signal)).length;
       score = hits >= 5 ? 4 : hits >= 3 ? 3 : hits >= 2 ? 2 : hits >= 1 ? 1 : 0;
-      rationale = "Score based on the depth of external organization engagement and practitioner interaction.";
+      rationale = extractEvidenceLine(proposalText, engagementSignals, ["organization", "reviewed", "work product"]) || "No exact external-engagement evidence found in the proposal.";
       improvement = "Describe the organization, contact hours, student deliverables, and how the work is reviewed.";
-      // collect evidence snippet(s)
-      const qualMatches = [];
-      engagementSignals.forEach((signal) => {
-        const idx = proposalText.toLowerCase().indexOf(signal);
-        if (idx >= 0) {
-          const start = Math.max(0, idx - 40);
-          const end = Math.min(proposalText.length, idx + signal.length + 40);
-          qualMatches.push(proposalText.substring(start, end).trim());
-        }
-      });
-      if (qualMatches.length) {
-        rationale = qualMatches.join(' ... ');
-      }
     }
 
     if (id === "software-approvals-dx") {
-      const approvedSignals = ["already approved", "dx approved", "approved by dx", "approval", "license", "licensed"];
+      const approvedSignals = ["already approved", "dx approved", "approved by dx"];
       const strongSignals = ["working with", "within 2 weeks", "full approval", "100% functionality", "mature in process"];
-      const approvedHits = approvedSignals.filter((signal) => text.includes(signal)).length;
-      const strongHits = strongSignals.filter((signal) => text.includes(signal)).length;
-      score = text.includes("already approved") || text.includes("approved by dx") ? 4 : strongHits >= 2 ? 2 : approvedHits >= 2 ? 2 : 0;
-      rationale = "Score based on the software approval status and evidence of imminent DX approval.";
-      improvement = "State whether DX has already approved the software or provide concrete evidence they are about to approve it.";
-      // evidence snippet
-      const dxMatch = /(?:already approved|approved by dx|dx approved|approval|license|licensed)/i.exec(proposalText);
-      if (dxMatch) {
-        const idx = proposalText.toLowerCase().indexOf(dxMatch[0].toLowerCase());
-        const start = Math.max(0, idx - 40);
-        const end = Math.min(proposalText.length, idx + dxMatch[0].length + 40);
-        rationale = proposalText.substring(start, end).trim();
+      const softwareSignals = ["software", "tool", "tools", "api", "platform", "license", "licensed"];
+      const approvalEvidence = extractEvidenceLine(proposalText, approvedSignals, softwareSignals);
+      const strongEvidence = extractEvidenceLine(proposalText, strongSignals, softwareSignals);
+      if (approvalEvidence) {
+        score = 4;
+      } else if (strongEvidence && strongSignals.some((signal) => strongEvidence.toLowerCase().includes(signal))) {
+        score = 3;
+      } else {
+        score = 0;
       }
+      rationale = approvalEvidence || strongEvidence || extractEvidenceLine(proposalText, softwareSignals) || "No exact DX approval evidence found in the proposal.";
+      improvement = "State whether DX has already approved the software or provide concrete evidence they are about to approve it.";
     }
 
     if (id === "assessment-plan") {
       const assessSignals = ["outcome", "baseline", "post", "metric", "survey", "assessment", "durable skill", "method"];
       const hits = assessSignals.filter((signal) => text.includes(signal)).length;
       score = hits >= 5 ? 4 : hits >= 3 ? 2 : hits >= 2 ? 1 : 0;
-      rationale = "Score based on how clearly the outcomes and assessment methods are defined.";
+      rationale = extractEvidenceLine(proposalText, assessSignals, ["learning", "measure", "student"]) || "No exact assessment-plan evidence found in the proposal.";
       improvement = "Add specific learning outcomes and describe how student learning will be measured.";
-      const assessSignals = ["outcome", "baseline", "post", "metric", "survey", "assessment", "durable skill", "method"];
-      const assessMatches = [];
-      assessSignals.forEach((signal) => {
-        const idx = proposalText.toLowerCase().indexOf(signal);
-        if (idx >= 0) {
-          const start = Math.max(0, idx - 40);
-          const end = Math.min(proposalText.length, idx + signal.length + 40);
-          assessMatches.push(proposalText.substring(start, end).trim());
-        }
-      });
-      if (assessMatches.length) rationale = assessMatches.join(' ... ');
     }
 
     if (id === "rapid-impact") {
@@ -334,36 +296,16 @@ function heuristicGradeProposal(proposalText, rubric, facultySubmission) {
       const summerFallHits = summerFallSignals.filter((signal) => text.includes(signal)).length;
       const springHits = springSignals.filter((signal) => text.includes(signal)).length;
       score = summerFallHits >= 2 ? 4 : summerFallHits >= 1 ? 3 : springHits >= 1 ? 0 : 0;
-      rationale = "Score based on when students will experience the grant's benefits.";
+      rationale = extractEvidenceLine(proposalText, summerFallSignals, springSignals) || "No exact timing evidence found in the proposal.";
       improvement = "Make the timing explicit and show whether impact starts in summer or fall 2026.";
-      const timingSignals = summerFallSignals.concat(springSignals);
-      for (const s of timingSignals) {
-        const idx = proposalText.toLowerCase().indexOf(s);
-        if (idx >= 0) {
-          const start = Math.max(0, idx - 40);
-          const end = Math.min(proposalText.length, idx + s.length + 40);
-          rationale = proposalText.substring(start, end).trim();
-          break;
-        }
-      }
     }
 
     if (id === "sustainability-plan") {
       const sustainSignals = ["continue", "beyond", "ongoing", "future", "dean", "fund", "free", "cheap", "one-time", "stick"];
       const hits = sustainSignals.filter((signal) => text.includes(signal)).length;
       score = hits >= 5 ? 4 : hits >= 2 ? 1 : 0;
-      rationale = "Score based on whether the proposal explains how the work continues after the grant ends.";
+      rationale = extractEvidenceLine(proposalText, sustainSignals, ["after the grant", "ongoing support", "reusable"]) || "No exact sustainability evidence found in the proposal.";
       improvement = "State who will maintain the change and how ongoing costs will be covered.";
-      const sustMatches = [];
-      sustainSignals.forEach((signal) => {
-        const idx = proposalText.toLowerCase().indexOf(signal);
-        if (idx >= 0) {
-          const start = Math.max(0, idx - 40);
-          const end = Math.min(proposalText.length, idx + signal.length + 40);
-          sustMatches.push(proposalText.substring(start, end).trim());
-        }
-      });
-      if (sustMatches.length) rationale = sustMatches.join(' ... ');
     }
 
     return {
@@ -390,10 +332,13 @@ function heuristicGradeProposal(proposalText, rubric, facultySubmission) {
         c.score = 4;
         c.rationale = c.rationale || "Demo boost: treated as high-impact for the example submission.";
         c.improvement = c.improvement || "No immediate changes required for demo-quality submission.";
-      } else if (c.id === "qualitative-impact" || c.id === "software-approvals-dx") {
+      } else if (c.id === "qualitative-impact") {
         c.score = 4;
         c.rationale = c.rationale || "Demo boost: evidence aligns strongly to this criterion.";
         c.improvement = c.improvement || "No immediate changes required for demo-quality submission.";
+      } else if (c.id === "software-approvals-dx") {
+        c.rationale = c.rationale || "No exact DX approval evidence found in the proposal.";
+        c.improvement = c.improvement || "State whether DX has already approved the software or provide concrete evidence they are about to approve it.";
       } else {
         c.score = Math.max(2, c.score);
         c.rationale = c.rationale || "Baseline moderate evidence detected.";
@@ -456,6 +401,24 @@ function escapeMarkdown(text) {
   return String(text)
     .replaceAll("|", "\\|")
     .replaceAll("\n", "<br>");
+}
+
+function extractEvidenceLine(text, signals, fallbackSignals = []) {
+  const lines = String(text || "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const searchSignals = [...signals, ...fallbackSignals].filter(Boolean);
+
+  for (const signal of searchSignals) {
+    const needle = String(signal).toLowerCase();
+    const match = lines.find((line) => line.toLowerCase().includes(needle));
+    if (match) {
+      return match;
+    }
+  }
+
+  return "";
 }
 
 async function gradeProposalAgainstRubric({ proposalText, rubric, facultySubmission }) {
