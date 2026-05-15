@@ -287,6 +287,12 @@ document.getElementById("autofill-explore")?.addEventListener("click", () => {
   exploreForm.elements["software"].value = "Python-based ML frameworks, Jupyter notebooks, data visualization tools";
 });
 
+document.getElementById("clear-explore")?.addEventListener("click", () => {
+  exploreForm.reset();
+  setPanelVisible(exploreOutput, false);
+  exploreOutput.textContent = "";
+});
+
 document.getElementById("autofill-execute")?.addEventListener("click", () => {
   executeForm.elements["box1"].value = "CS 2300 - Data Science";
   executeForm.elements["box2"].value = "Students complete a capstone project analyzing real-world datasets using machine learning algorithms";
@@ -294,6 +300,14 @@ document.getElementById("autofill-execute")?.addEventListener("click", () => {
   executeForm.elements["box4"].value = "By using AI feedback during development, students strengthen critical thinking in data analysis, understand model limitations, practice scientific reasoning, and build confidence with real-world datasets";
   executeForm.elements["box5"].value = "$4,200";
   executeForm.elements["box6"].value = "Python (scikit-learn, pandas, TensorFlow), Jupyter notebooks, AWS or Google Cloud for model deployment, plagiarism/similarity detection API";
+});
+
+document.getElementById("clear-execute")?.addEventListener("click", () => {
+  executeForm.reset();
+  setPanelVisible(executeOutput, false);
+  setPanelVisible(executeGradeOutput, false);
+  executeOutput.textContent = "";
+  executeGradeOutput.textContent = "";
 });
 
 // ========== REVIEW PHASE FUNCTIONALITY ==========
