@@ -365,7 +365,11 @@ function buildGradingMarkdown(grading, facultySubmission) {
     const score = `${Math.max(0, Math.min(4, toNumber(c.score, 0)))}/4`;
     const applicantAnswer = escapeMarkdown(facultyAnswerForCriterion(c.id, facultySubmission));
     const rationale = escapeMarkdown(c.rationale || "");
-    const improvement = escapeMarkdown(c.improvement || "");
+    let improvementText = c.improvement || "";
+    if (toNumber(c.score, 0) >= toNumber(c.maxScore, 4)) {
+      improvementText = "Looks good — full marks.";
+    }
+    const improvement = escapeMarkdown(improvementText);
     lines.push(
       `| ${c.name} | ${toNumber(c.weightPercent, 0)}% | ${score} | ${applicantAnswer} | ${rationale} | ${improvement} |`
     );
@@ -660,7 +664,23 @@ This project modernizes ${payload.box2_assignment || "a core assignment"} in ${p
         source: "unavailable"
       };
     }
-
+    // If grading is available, append an estimated overall grade to the 30-second Pitch
+    try {
+      const g = gradingResponse && gradingResponse.grading;
+      if (g && (g.overallPercent !== undefined)) {
+        const overallPercent = g.overallPercent;
+        const overallPoints = g.overallPoints;
+        const gradeNote = `\n\n**Estimated Rubric Grade:** ${overallPercent}% (${overallPoints}/4.00)`;
+        if (typeof text === "string" && text.includes("## 30-second Pitch")) {
+          text = text.replace("## 30-second Pitch", "## 30-second Pitch" + gradeNote);
+        } else if (typeof text === "string") {
+          text = text + "\n\n" + gradeNote;
+        }
+      }
+    } catch (e) {
+      // non-fatal
+      console.error("Failed to append grade note to pitch:", e.message);
+    }
     return res.json({
       content: text,
       grading: gradingResponse.grading,
