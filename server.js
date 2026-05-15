@@ -318,7 +318,20 @@ function heuristicGradeProposal(proposalText, rubric) {
   };
 }
 
-function buildGradingMarkdown(grading) {
+function facultyAnswerForCriterion(criterionId, facultySubmission) {
+  if (!facultySubmission) return "(no faculty submission provided)";
+  const byBox = {
+    "quantitative-impact": `${facultySubmission.box1_course || ""} — ${facultySubmission.box2_assignment || ""}`,
+    "qualitative-impact": `${facultySubmission.box3_build || ""}\n\n${facultySubmission.box4_learning || ""}`,
+    "software-approvals-dx": `${facultySubmission.box6_software || ""}`,
+    "assessment-plan": `${facultySubmission.box4_learning || ""}`,
+    "rapid-impact": `${facultySubmission.box1_course || ""} — ${facultySubmission.box2_assignment || ""}`,
+    "sustainability-plan": `${facultySubmission.box5_money || ""} — ${facultySubmission.box4_learning || ""}`
+  };
+  return byBox[criterionId] || `${Object.values(facultySubmission).join(" \n\n")}`;
+}
+
+function buildGradingMarkdown(grading, facultySubmission) {
   if (!grading?.criteria?.length) {
     return "## Rubric Grade\n- Grading data unavailable.";
   }
@@ -327,18 +340,28 @@ function buildGradingMarkdown(grading) {
     "## Rubric Grade",
     `- Overall Score: **${grading.overallPercent}%** (${grading.overallPoints}/4.00)`,
     "",
-    "| Criterion | Weight | Score | Rationale | Improve Next |",
-    "|---|---:|---:|---|---|"
+    "| Criterion | Weight | Score | Applicant Answer | Rationale | Improve Next |",
+    "|---|---:|---:|---|---|---|"
   ];
 
   for (const c of grading.criteria) {
     const score = `${Math.max(0, Math.min(4, toNumber(c.score, 0)))}/4`;
+    const applicantAnswer = escapeMarkdown(facultyAnswerForCriterion(c.id, facultySubmission));
+    const rationale = escapeMarkdown(c.rationale || "");
+    const improvement = escapeMarkdown(c.improvement || "");
     lines.push(
-      `| ${c.name} | ${toNumber(c.weightPercent, 0)}% | ${score} | ${c.rationale || ""} | ${c.improvement || ""} |`
+      `| ${c.name} | ${toNumber(c.weightPercent, 0)}% | ${score} | ${applicantAnswer} | ${rationale} | ${improvement} |`
     );
   }
 
   return lines.join("\n");
+}
+
+function escapeMarkdown(text) {
+  if (text === null || text === undefined) return "";
+  return String(text)
+    .replaceAll("|", "\\|")
+    .replaceAll("\n", "<br>");
 }
 
 async function gradeProposalAgainstRubric({ proposalText, rubric, facultySubmission }) {
@@ -359,7 +382,7 @@ async function gradeProposalAgainstRubric({ proposalText, rubric, facultySubmiss
       };
       return {
         grading: normalized,
-        report: external.report || buildGradingMarkdown(normalized),
+        report: external.report || buildGradingMarkdown(normalized, facultySubmission),
         source: "external-api"
       };
     }
@@ -371,7 +394,7 @@ async function gradeProposalAgainstRubric({ proposalText, rubric, facultySubmiss
       };
       return {
         grading: normalized,
-        report: external.report || buildGradingMarkdown(normalized),
+        report: external.report || buildGradingMarkdown(normalized, facultySubmission),
         source: "external-api"
       };
     }
@@ -404,7 +427,7 @@ async function gradeProposalAgainstRubric({ proposalText, rubric, facultySubmiss
     };
     return {
       grading: normalized,
-      report: buildGradingMarkdown(normalized),
+      report: buildGradingMarkdown(normalized, facultySubmission),
       source: "internal-ai"
     };
   }
@@ -412,7 +435,7 @@ async function gradeProposalAgainstRubric({ proposalText, rubric, facultySubmiss
   const heuristic = heuristicGradeProposal(proposalText, rubric);
   return {
     grading: heuristic,
-    report: buildGradingMarkdown(heuristic),
+    report: buildGradingMarkdown(heuristic, facultySubmission),
     source: "heuristic-fallback"
   };
 }
