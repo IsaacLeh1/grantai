@@ -294,6 +294,12 @@ select {
   cursor: pointer;
 }
 
+.autofill-variant.selected {
+  border-color: var(--brand);
+  background: linear-gradient(120deg, rgba(45,139,87,0.12), rgba(18,76,53,0.04));
+  box-shadow: 0 6px 18px rgba(18,76,53,0.06);
+}
+
 .inline-actions {
   display: flex;
   flex-wrap: wrap;

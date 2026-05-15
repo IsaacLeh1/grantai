@@ -19,6 +19,7 @@ const chatForm = document.getElementById("chat-form");
 const chatInput = document.getElementById("chat-input");
 
 let softwareCache = [];
+let currentExecuteAutofill = null;
 
 function setPanelVisible(panel, visible) {
   if (!panel) {
@@ -208,12 +209,16 @@ executeForm.addEventListener("submit", async (e) => {
   executeGradeOutput.textContent = "Grading proposal against rubric...";
   try {
     const payload = Object.fromEntries(formData.entries());
+    if (currentExecuteAutofill) {
+      payload.autofillVariant = currentExecuteAutofill;
+    }
     const result = await fetchJSON("/api/execute", {
       method: "POST",
       body: JSON.stringify(payload)
     });
     renderMarkdown(executeOutput, result.content);
-    renderMarkdown(executeGradeOutput, result.gradingReport || "## Rubric Grade\n- No grade returned.");
+    const variantLabel = currentExecuteAutofill ? `**Variant:** ${currentExecuteAutofill}\n\n` : "";
+    renderMarkdown(executeGradeOutput, (variantLabel || "") + (result.gradingReport || "## Rubric Grade\n- No grade returned."));
   } catch (err) {
     executeOutput.textContent = `Unable to draft proposal: ${err.message}`;
     setPanelVisible(executeGradeOutput, false);
@@ -300,6 +305,48 @@ document.getElementById("autofill-execute")?.addEventListener("click", () => {
   executeForm.elements["box4"].value = "By using AI feedback during development, students strengthen critical thinking in data analysis, understand model limitations, practice scientific reasoning, and build confidence with real-world datasets";
   executeForm.elements["box5"].value = "$4,200";
   executeForm.elements["box6"].value = "Python (scikit-learn, pandas, TensorFlow), Jupyter notebooks, AWS or Google Cloud for model deployment, plagiarism/similarity detection API";
+});
+
+// Autofill variants: set fields and mark selected variant
+function clearExecuteAutofillSelection() {
+  currentExecuteAutofill = null;
+  document.querySelectorAll('.autofill-variant').forEach(btn => btn.classList.remove('selected'));
+}
+
+document.getElementById("autofill-execute-1")?.addEventListener("click", () => {
+  clearExecuteAutofillSelection();
+  currentExecuteAutofill = 'A';
+  document.getElementById('autofill-execute-1').classList.add('selected');
+  executeForm.elements["box1"].value = "CS 2300 - Data Science";
+  executeForm.elements["box2"].value = "Students complete a capstone project analyzing real-world datasets using machine learning algorithms";
+  executeForm.elements["box3"].value = "Implement an AI-powered peer review system that provides automated, rubric-aligned feedback on student data analysis work, helping identify methodological issues early and guide model selection";
+  executeForm.elements["box4"].value = "By using AI feedback during development, students strengthen critical thinking in data analysis, understand model limitations, practice scientific reasoning, and build confidence with real-world datasets";
+  executeForm.elements["box5"].value = "$4,200";
+  executeForm.elements["box6"].value = "Python (scikit-learn, pandas, TensorFlow), Jupyter notebooks, AWS or Google Cloud for model deployment, plagiarism/similarity detection API";
+});
+
+document.getElementById("autofill-execute-2")?.addEventListener("click", () => {
+  clearExecuteAutofillSelection();
+  currentExecuteAutofill = 'B';
+  document.getElementById('autofill-execute-2').classList.add('selected');
+  executeForm.elements["box1"].value = "BIO 1100 - Intro Biology";
+  executeForm.elements["box2"].value = "Weekly lab reports that build toward a final research poster";
+  executeForm.elements["box3"].value = "Create a student-driven ePortfolio system with embedded video reflections and automated rubric extraction to measure lab technique improvements";
+  executeForm.elements["box4"].value = "Video reflections + rubric extraction allow instructors to quickly identify skills gaps and tailor lab instruction, increasing hands-on competency and retention";
+  executeForm.elements["box5"].value = "$3,200";
+  executeForm.elements["box6"].value = "Video capture tools, LMS integration, simple analytics dashboard";
+});
+
+document.getElementById("autofill-execute-3")?.addEventListener("click", () => {
+  clearExecuteAutofillSelection();
+  currentExecuteAutofill = 'C';
+  document.getElementById('autofill-execute-3').classList.add('selected');
+  executeForm.elements["box1"].value = "ENG 201 - Technical Writing";
+  executeForm.elements["box2"].value = "Drafting and peer-review cycles for technical report deliverables";
+  executeForm.elements["box3"].value = "Introduce an annotation + versioning workspace that scaffolds peer feedback, captures revisions, and aligns edits to rubric criteria";
+  executeForm.elements["box4"].value = "Scaffolded peer review with versioning helps students iterate faster, receive targeted feedback, and improves clarity in technical communication";
+  executeForm.elements["box5"].value = "$2,800";
+  executeForm.elements["box6"].value = "Collaborative editing platform, annotation plugin, version control integration";
 });
 
 document.getElementById("clear-execute")?.addEventListener("click", () => {
