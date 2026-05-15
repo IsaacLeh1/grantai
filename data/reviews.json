@@ -1,0 +1,77 @@
+[
+  {
+    "applicationId": "app-001",
+    "reviewerName": "Dr. Patricia Johnson",
+    "comments": "Strong proposal with good scalability. External engagement could be strengthened. Clear timeline and budget justification.",
+    "scores": {
+      "quantitative-impact": 4,
+      "qualitative-impact": 2,
+      "software-approvals-dx": 2,
+      "assessment-plan": 3,
+      "rapid-impact": 4,
+      "sustainability-plan": 3
+    },
+    "timestamp": "2026-05-14T16:46:24.738Z",
+    "id": "review-1778777184771-fjpu5ycwu"
+  },
+  {
+    "applicationId": "app-002",
+    "reviewerName": "Dr. Marcus Williams",
+    "comments": "Excellent proposal with strong external partnerships and clear sustainability plan. Authentic student engagement with real-world impact. Ready for approval.",
+    "scores": {
+      "quantitative-impact": 3,
+      "qualitative-impact": 4,
+      "software-approvals-dx": 4,
+      "assessment-plan": 4,
+      "rapid-impact": 4,
+      "sustainability-plan": 4
+    },
+    "timestamp": "2026-05-14T16:46:49.903Z",
+    "id": "review-1778777209925-f7dtpb2lv"
+  },
+  {
+    "applicationId": "app-001",
+    "reviewerName": "Test",
+    "comments": "",
+    "scores": {
+      "quantitative-impact": 4,
+      "qualitative-impact": 2,
+      "software-approvals-dx": 3,
+      "assessment-plan": 4,
+      "rapid-impact": 4,
+      "sustainability-plan": 4
+    },
+    "timestamp": "2026-05-14T17:15:10.307Z",
+    "id": "review-1778778910316-khkntzv3h"
+  },
+  {
+    "applicationId": "app-001",
+    "reviewerName": "Test",
+    "comments": "",
+    "scores": {
+      "quantitative-impact": 4,
+      "qualitative-impact": 2,
+      "software-approvals-dx": 3,
+      "assessment-plan": 4,
+      "rapid-impact": 4,
+      "sustainability-plan": 4
+    },
+    "timestamp": "2026-05-14T17:15:11.395Z",
+    "id": "review-1778778911423-af7pc07vn"
+  },
+  {
+    "applicationId": "app-001",
+    "reviewerName": "Test",
+    "comments": "",
+    "scores": {
+      "quantitative-impact": 4,
+      "qualitative-impact": 2,
+      "software-approvals-dx": 3,
+      "assessment-plan": 4,
+      "rapid-impact": 4,
+      "sustainability-plan": 4
+    },
+    "timestamp": "2026-05-14T17:15:11.741Z",
+    "id": "review-1778778912034-3rlnrrtd9"
+  }
+]

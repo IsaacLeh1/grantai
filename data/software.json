@@ -1,0 +1,58 @@
+[
+  {
+    "name": "Canvas Studio",
+    "category": "Video and feedback",
+    "bestFor": ["video annotation", "flipped classroom", "multimodal feedback"],
+    "costModel": "Campus license often available",
+    "notes": "Good for interactive video assignments and instructor comments."
+  },
+  {
+    "name": "Perusall",
+    "category": "Social annotation",
+    "bestFor": ["reading engagement", "peer discussion", "low-stakes assessment"],
+    "costModel": "Institutional or course-level",
+    "notes": "Useful for collaborative reading and engagement analytics."
+  },
+  {
+    "name": "Gradescope",
+    "category": "Assessment workflow",
+    "bestFor": ["rubric grading", "large sections", "assignment feedback"],
+    "costModel": "Institutional agreement",
+    "notes": "Speeds grading while preserving rubric consistency."
+  },
+  {
+    "name": "Miro",
+    "category": "Collaboration and ideation",
+    "bestFor": ["design thinking", "group mapping", "project planning"],
+    "costModel": "Education plans available",
+    "notes": "Strong for visual collaboration and interactive activities."
+  },
+  {
+    "name": "Adobe Express",
+    "category": "Creative production",
+    "bestFor": ["digital storytelling", "infographics", "media projects"],
+    "costModel": "Education licenses available",
+    "notes": "Student-friendly tool for media-rich assignments."
+  },
+  {
+    "name": "Otter.ai",
+    "category": "Accessibility and transcription",
+    "bestFor": ["lecture transcription", "meeting notes", "accessibility support"],
+    "costModel": "Tiered subscriptions",
+    "notes": "Helpful for accessibility and searchable class artifacts."
+  },
+  {
+    "name": "H5P",
+    "category": "Interactive content",
+    "bestFor": ["interactive quizzes", "branching scenarios", "self-paced learning"],
+    "costModel": "Open ecosystem",
+    "notes": "Builds reusable interactive content mapped to outcomes."
+  },
+  {
+    "name": "Tableau",
+    "category": "Data visualization",
+    "bestFor": ["data literacy", "project dashboards", "assessment analytics"],
+    "costModel": "Academic licensing available",
+    "notes": "Supports authentic data assignments and evidence reporting."
+  }
+]

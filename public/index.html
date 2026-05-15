@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GrantAI | UVU Faculty Grant Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="bg-shape bg-one"></div>
+    <div class="bg-shape bg-two"></div>
+
+    <header class="hero">
+      <h1>GrantAI Demo</h1>
+    </header>
+
+    <main class="container">
+      <section id="expose" class="phase" aria-labelledby="Expose phase">
+        <h2>1. Expose the Rubric Criteria</h2>
+        <p>
+          Reviewers score six criteria: quantitative impact, qualitative impact, software approvals by DX, assessment
+          plan, rapid impact, and sustainability.
+        </p>
+        <div class="rubric-controls" aria-label="Rubric view controls">
+          <button type="button" id="expand-rubric" class="secondary">Expand All</button>
+          <button type="button" id="collapse-rubric" class="secondary">Collapse All</button>
+          <span class="rubric-hint">Tip: start with criterion names, open details only when needed.</span>
+        </div>
+        <div id="rubric-grid" class="card-grid"></div>
+      </section>
+
+      <section id="explore" class="phase" aria-labelledby="Explore phase">
+        <h2>2. Explore Grant-Worthy Ideas</h2>
+        <p>Share context and get 3 rubric-aligned project directions.</p>
+        <form id="explore-form" class="panel-form">
+          <label>
+            Idea source
+            <select name="ideaSource">
+              <option value="internal-ai" selected>Internal AI (default)</option>
+              <option value="external-api">External Grant Ideas API</option>
+            </select>
+          </label>
+          <p class="field-hint">Use External API when your grant ideation service is configured on the server.</p>
+          <label>
+            Course context
+            <input type="text" name="course" placeholder="e.g., Biology 101" required />
+          </label>
+          <label>
+            Assignment or assessment focus
+            <input type="text" name="assignment" placeholder="e.g., Lab reflection portfolio" required />
+          </label>
+          <label>
+            Improvement goal
+            <textarea name="goal" rows="3" placeholder="What should improve for students?"></textarea>
+          </label>
+          <label>
+            Budget target
+            <input type="text" name="budget" placeholder="e.g., $4,000" />
+          </label>
+          <label>
+            Known software needs
+            <input type="text" name="software" placeholder="e.g., video annotation + analytics" />
+          </label>
+          <div class="inline-actions">
+            <button type="button" id="autofill-explore" class="secondary">Autofill Demo</button>
+            <button type="submit" class="cta">Generate Ideas</button>
+          </div>
+        </form>
+
+        <article id="explore-output" class="output-panel" aria-live="polite"></article>
+      </section>
+
+      <section id="execute" class="phase" aria-labelledby="Execute phase">
+        <h2>3. Execute with a Proposal Draft</h2>
+        <p>Complete all 6 boxes, then generate a polished draft you can edit.</p>
+
+        <form id="execute-form" class="panel-form">
+          <label>
+            Box 1: The course the faculty works with
+            <input type="text" name="box1" required />
+          </label>
+
+          <label>
+            Box 2: The assignment/assessment to be affected
+            <textarea name="box2" rows="2" required></textarea>
+          </label>
+
+          <label>
+            Box 3: What you want to build (connects to rubric)
+            <textarea name="box3" rows="3" required></textarea>
+          </label>
+
+          <label>
+            Box 4: How your idea improves learning (connects to rubric)
+            <textarea name="box4" rows="3" required></textarea>
+          </label>
+
+          <label>
+            Box 5: How much money is needed (up to $5,000)
+            <input type="text" name="box5" required />
+          </label>
+
+          <label>
+            Box 6: Software needed
+            <textarea name="box6" rows="2" required></textarea>
+          </label>
+
+          <div class="inline-actions">
+            <button type="button" id="autofill-execute" class="secondary">Autofill Demo</button>
+            <button type="button" id="open-software-chat" class="secondary">Ask Software Advisor</button>
+            <button type="button" id="show-software-list" class="secondary">View Available Software</button>
+          </div>
+
+          <button type="submit" class="cta">Draft Proposal</button>
+        </form>
+
+        <article id="execute-output" class="output-panel" aria-live="polite"></article>
+        <article id="execute-grade-output" class="output-panel" aria-live="polite"></article>
+      </section>
+
+      <section id="review" class="phase" aria-labelledby="Review phase">
+        <h2>4. Review & Score Applications</h2>
+        <p>Two independent reviewers evaluate each application as it arrives. Asynchronous review saves time.</p>
+
+        <div id="applications-list" class="applications-list">
+          <p style="color: var(--ink-soft); text-align: center;">Loading applications...</p>
+        </div>
+
+        <div id="review-form-container" style="display: none;">
+          <form id="review-form" class="panel-form">
+            <div id="app-header" class="app-header"></div>
+
+            <div class="review-criteria-group">
+              <h3>Evaluation Scoring</h3>
+              <p class="field-hint">Score each criterion. Detailed descriptions are in the rubric above.</p>
+
+              <div id="review-criteria-inputs"></div>
+
+              <label style="margin-top: 1rem;">
+                Reviewer Comments
+                <textarea name="comments" id="review-comments" rows="4" placeholder="Optional notes for the committee..."></textarea>
+              </label>
+
+              <label style="margin-top: 0.5rem;">
+                Reviewer Name (for identification)
+                <input type="text" name="reviewerName" id="review-name" placeholder="Your name" required />
+              </label>
+
+              <button type="submit" class="cta">Submit Review</button>
+            </div>
+          </form>
+
+          <article id="review-submit-output" class="output-panel" aria-live="polite" style="display: none;"></article>
+        </div>
+      </section>
+    </main>
+
+    <aside id="software-chat" class="drawer" aria-label="Software advisor chat">
+      <div class="drawer-head">
+        <h3>Software Advisor</h3>
+        <button id="close-software-chat" class="icon-btn" aria-label="Close">x</button>
+      </div>
+      <div id="chat-messages" class="chat-messages"></div>
+      <form id="chat-form" class="chat-form">
+        <input id="chat-input" type="text" placeholder="Ask what software fits your idea..." required />
+        <button type="submit">Send</button>
+      </form>
+    </aside>
+
+    <dialog id="software-dialog">
+      <h3>Available Software</h3>
+      <ul id="software-list" class="software-list"></ul>
+      <form method="dialog">
+        <button class="secondary">Close</button>
+      </form>
+    </dialog>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="./script.js" type="module"></script>
+  </body>
+</html>

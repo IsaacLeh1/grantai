@@ -1,0 +1,22 @@
+[
+  {
+    "id": "app-001",
+    "facultyName": "Dr. Sarah Chen",
+    "course": "Biology 101",
+    "assignment": "Lab Portfolio with AI Feedback",
+    "proposedIdeaSummary": "Interactive feedback studio using AI to provide real-time guidance on 400+ students' lab reflections across 8 sections.",
+    "budget": "$3,500",
+    "submittedAt": "2026-05-10T08:30:00Z",
+    "fullProposal": "This proposal aims to integrate AI-powered feedback systems into our introductory biology lab portfolio. With 400+ students across 8 sections, we will implement an automated feedback loop that provides immediate guidance on student lab reflections. This ties to external organization engagement through partnerships with local biotech firms who will provide real-world case studies and will review final student deliverables. The system will be sustainable through Canvas integration and will be ready for deployment in Fall 2026."
+  },
+  {
+    "id": "app-002",
+    "facultyName": "Prof. James Rodriguez",
+    "course": "CS 1400 - Introduction to Programming",
+    "assignment": "Capstone Project with External Partner",
+    "proposedIdeaSummary": "Students partner with local tech startups to solve real problems using AI tools, 180 students.",
+    "budget": "$4,200",
+    "submittedAt": "2026-05-11T14:15:00Z",
+    "fullProposal": "This grant supports CS 1400 students (180 total) to work directly with 6 local tech startups on real-world problems. Each startup will host 30 students for 12+ contact hours across the semester, with students producing deliverables the startups will use. This meets all external engagement criteria. AI tools will be integrated for data analysis and documentation. DX approval for GitHub Copilot is already in place. Sustainability: startups have committed to funding continuation after year one."
+  }
+]

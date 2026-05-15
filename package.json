@@ -1,0 +1,28 @@
+{
+  "name": "grantai",
+  "version": "1.0.0",
+  "description": "GrantAI - UVU faculty grant advising assistant",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "grant",
+    "education",
+    "uvu",
+    "ai"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.3.1",
+    "express": "^4.22.1",
+    "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
