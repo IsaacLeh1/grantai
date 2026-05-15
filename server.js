@@ -375,13 +375,12 @@ function buildGradingMarkdown(grading, facultySubmission) {
     "## Rubric Grade",
     `- Overall Score: **${grading.overallPercent}%** (${grading.overallPoints}/4.00)`,
     "",
-    "| Criterion | Weight | Score | Applicant Answer | Rationale | Improve Next |",
-    "|---|---:|---:|---|---|---|"
+    "| Criterion | Weight | Score | Rationale | Improve Next |",
+    "|---|---:|---:|---|---|"
   ];
 
   for (const c of grading.criteria) {
     const score = `${Math.max(0, Math.min(4, toNumber(c.score, 0)))}/4`;
-    const applicantAnswer = escapeMarkdown(facultyAnswerForCriterion(c.id, facultySubmission));
     const rationale = escapeMarkdown(c.rationale || "");
     let improvementText = c.improvement || "";
     if (toNumber(c.score, 0) >= toNumber(c.maxScore, 4)) {
@@ -389,7 +388,7 @@ function buildGradingMarkdown(grading, facultySubmission) {
     }
     const improvement = escapeMarkdown(improvementText);
     lines.push(
-      `| ${c.name} | ${toNumber(c.weightPercent, 0)}% | ${score} | ${applicantAnswer} | ${rationale} | ${improvement} |`
+      `| ${c.name} | ${toNumber(c.weightPercent, 0)}% | ${score} | ${rationale} | ${improvement} |`
     );
   }
 
