@@ -600,6 +600,10 @@ app.post("/api/execute", async (req, res) => {
       box5_money: safe(body.box5),
       box6_software: safe(body.box6)
     };
+    // Preserve autofillVariant if provided by the client so heuristic can detect demo variant
+    if (body.autofillVariant) {
+      payload.autofillVariant = safe(body.autofillVariant);
+    }
 
     const systemPrompt = "You are a grant writing copilot for UVU faculty. Draft clear proposal content with practical language and measurable outcomes. Return markdown only.";
     const userPrompt = `Rubric criteria:\n${JSON.stringify(rubric.criteria, null, 2)}\n\nFaculty submission:\n${JSON.stringify(payload, null, 2)}\n\nCreate a concise draft proposal with sections: Project Summary, Need Statement, Proposed Intervention, Implementation Plan, Assessment Plan, Budget Justification, Sustainability, and 30-second Pitch.`;
