@@ -469,14 +469,16 @@ async function populateReviewForm(app) {
     
     const levelEntries = Object.entries(criterion.levels || {});
     const scoreOptions = levelEntries
-      .map(([key, label]) => {
-        const points = scoreForLevel(key);
+      .map(([key, levelVal]) => {
+        const isObj = typeof levelVal === 'object' && levelVal !== null;
+        const levelText = isObj ? (levelVal.text || '') : (levelVal || '');
+        const points = isObj && (levelVal.points !== undefined) ? levelVal.points : scoreForLevel(key);
         return `
           <label class="score-choice">
             <input type="checkbox" name="criterion-${criterion.id}" value="${points}" data-criterion-group="criterion-${criterion.id}">
             <span class="score-choice-label">
               <strong>${points} pts</strong>
-              <span>${formatRubricLevelLabel(key)}: ${label}</span>
+              <span>${formatRubricLevelLabel(key)}: ${escapeHtml(levelText)}</span>
             </span>
           </label>
         `;
