@@ -365,7 +365,8 @@ agentInputForm?.addEventListener('submit', async (e) => {
   if (currentQuestionIndex === 0) {
     const file = syllabusUpload.files && syllabusUpload.files[0];
     if (!file) {
-      appendAgentMessage('Please upload your syllabus — this is required before continuing.');
+      // Do not display an error to the user; simply focus the upload control.
+      syllabusUpload.focus();
       return;
     }
     appendUserMessage(file.name);
@@ -378,12 +379,11 @@ agentInputForm?.addEventListener('submit', async (e) => {
       if (res.ok) {
         const data = await res.json().catch(() => ({}));
         recordedName = data.filename || data.path || recordedName;
-        if (agentStatus) agentStatus.textContent = 'Syllabus uploaded successfully.';
-      } else {
-        if (agentStatus) agentStatus.textContent = 'Upload endpoint returned an error; filename saved locally.';
       }
+      // On non-ok responses, fail silently and keep recordedName as filename.
     } catch (err) {
-      if (agentStatus) agentStatus.textContent = 'Upload not available; filename saved locally.';
+      // Swallow network or other errors silently. Log for debugging only.
+      console.log('Syllabus upload failed (silently):', err);
     }
 
     agentAnswers.push({ question: agentQuestions[0], answer: recordedName, fileName: file.name });
