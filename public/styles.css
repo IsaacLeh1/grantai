@@ -78,6 +78,15 @@ h3 {
   color: var(--ink-soft);
 }
 
+
+/* Small styles for the agent chat */
+.agent-chat { max-height: 360px; overflow:auto; padding:12px; border:1px solid #e5e7eb; background:#fff; margin-bottom:8px; }
+.agent-msg { padding:8px 10px; margin:6px 0; border-radius:6px; }
+.agent-msg.bot { background:#f1f5f9; color:#0f172a; }
+.agent-msg.user { background:#dbeafe; color:#0b1220; text-align:right; }
+.agent-input { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.agent-input input[type="text"] { flex:1; padding:8px; }
+.proposal-options button { margin-right:8px; margin-top:8px; }
 .phase-tabs {
   max-width: 1600px;
   margin: 0 auto 1.2rem;

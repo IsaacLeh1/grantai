@@ -185,7 +185,8 @@ async function loadSoftware() {
   });
 }
 
-exploreForm.addEventListener("submit", async (e) => {
+if (exploreForm) {
+  exploreForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const formData = new FormData(exploreForm);
 
@@ -201,7 +202,8 @@ exploreForm.addEventListener("submit", async (e) => {
   } catch (err) {
     exploreOutput.textContent = `Unable to generate ideas: ${err.message}`;
   }
-});
+  });
+}
 
 executeForm.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -284,6 +286,224 @@ loadRubric();
 loadSoftware().catch(() => {
   // Software list can be lazily loaded later if initial fetch fails.
 });
+
+// ========== AGENTIC Q&A (Section 2) ==========
+const agentChat = document.getElementById('agent-chat');
+const agentInputForm = document.getElementById('agent-input-form');
+const agentTextInput = document.getElementById('agent-text-input');
+const syllabusUpload = document.getElementById('syllabus-upload');
+const fileUploadLabel = document.getElementById('file-upload-label');
+const agentSendResults = document.getElementById('agent-send-results');
+const agentSatisfiedBtn = document.getElementById('agent-satisfied');
+const agentClearBtn = document.getElementById('agent-clear');
+const agentOptions = document.getElementById('agent-options');
+
+const agentQuestions = [
+  'Please upload your syllabus (PDF or Word).',
+  'What class is this, professor name, and brief coursework description?',
+  'Which assignments or assessments would you like to enhance with AI? (List them or describe them)',
+  'What specific student learning outcomes do you want to improve?',
+  'How will you measure improvement? (rubric scores, exam items, completion rates, etc.)',
+  'What is the target student population and typical enrollment size for the course?',
+  'When would you implement this (semester/timeline)?',
+  'Do you have software or hardware constraints or preferences?',
+  'What is your budget target or constraints?',
+  'Who are potential collaborators or stakeholders (TAs, dept, IT)?',
+  'Are there ethical, privacy, or approval considerations (FERPA, IRB, DX approvals)?',
+  'Anything else to highlight about the course or students that will help design the proposal?'
+];
+
+let agentAnswers = [];
+let currentQuestionIndex = 0;
+
+function appendAgentMessage(text) {
+  const div = document.createElement('div');
+  div.className = 'agent-msg bot';
+  div.textContent = text;
+  agentChat.appendChild(div);
+  agentChat.scrollTop = agentChat.scrollHeight;
+}
+
+function appendUserMessage(text) {
+  const div = document.createElement('div');
+  div.className = 'agent-msg user';
+  div.textContent = text;
+  agentChat.appendChild(div);
+  agentChat.scrollTop = agentChat.scrollHeight;
+}
+
+function startAgent() {
+  agentChat.innerHTML = '';
+  agentAnswers = [];
+  currentQuestionIndex = 0;
+  showQuestion(currentQuestionIndex);
+}
+
+function showQuestion(idx) {
+  const q = agentQuestions[idx];
+  if (!q) return;
+  appendAgentMessage(q);
+  // show file upload only for first question
+  if (idx === 0) {
+    fileUploadLabel.style.display = '';
+    agentTextInput.style.display = 'none';
+  } else {
+    fileUploadLabel.style.display = 'none';
+    agentTextInput.style.display = '';
+    agentTextInput.focus();
+  }
+}
+
+agentInputForm?.addEventListener('submit', (e) => {
+  e.preventDefault();
+  if (currentQuestionIndex === 0) {
+    const file = syllabusUpload.files && syllabusUpload.files[0];
+    if (!file) {
+      appendAgentMessage('Please choose a file to upload or click Send Answer to skip.');
+      return;
+    }
+    appendUserMessage(file.name);
+    agentAnswers.push({question: agentQuestions[0], answer: file.name});
+    // pretend upload: in real app we'd send file to server
+    currentQuestionIndex++;
+    showQuestion(currentQuestionIndex);
+    syllabusUpload.value = '';
+    return;
+  }
+
+  const text = agentTextInput.value.trim();
+  if (!text) return;
+  appendUserMessage(text);
+  agentAnswers.push({question: agentQuestions[currentQuestionIndex], answer: text});
+  agentTextInput.value = '';
+  // after answering assignment question, provide 10 improvement ideas
+  if (currentQuestionIndex === 2) {
+    const improvements = generateImprovements(text);
+    appendAgentMessage('Here are 10 possible ways to improve that assignment:');
+    const ul = document.createElement('ul');
+    improvements.forEach((it) => {
+      const li = document.createElement('li');
+      li.textContent = it;
+      ul.appendChild(li);
+    });
+    agentChat.appendChild(ul);
+    appendAgentMessage('Would you like to learn more about any of these? If so, name the number or say "no".');
+    agentChat.scrollTop = agentChat.scrollHeight;
+    // keep at same question index to allow follow-up
+    currentQuestionIndex++;
+    showQuestion(currentQuestionIndex);
+    return;
+  }
+
+  currentQuestionIndex++;
+  if (currentQuestionIndex < agentQuestions.length) {
+    showQuestion(currentQuestionIndex);
+  } else {
+    appendAgentMessage('All questions complete. When ready, click "I\'m Satisfied (Next Agent)" to review a summary and choose proposal options, or click "Send Results" to export now.');
+  }
+});
+
+agentSendResults?.addEventListener('click', () => {
+  // simple export: show collected answers as downloadable JSON
+  const blob = new Blob([JSON.stringify(agentAnswers, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'grant-agent-results.json';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+agentClearBtn?.addEventListener('click', () => {
+  startAgent();
+  agentOptions.innerHTML = '';
+  agentOptions.setAttribute('aria-hidden', 'true');
+});
+
+agentSatisfiedBtn?.addEventListener('click', () => {
+  // Agent 2: summarize and offer 3 proposal options
+  const summary = agentAnswers.map(a => `- ${a.question} → ${a.answer}`).join('\n');
+  agentOptions.setAttribute('aria-hidden', 'false');
+  agentOptions.innerHTML = '';
+  const h = document.createElement('h3');
+  h.textContent = 'Agent Summary & Proposal Options';
+  agentOptions.appendChild(h);
+  const pre = document.createElement('pre');
+  pre.textContent = summary || 'No answers collected.';
+  agentOptions.appendChild(pre);
+
+  const prompt = document.createElement('p');
+  prompt.textContent = 'Any desired changes or additions? If satisfied, choose one of three proposal directions below.';
+  agentOptions.appendChild(prompt);
+
+  const opts = document.createElement('div');
+  opts.className = 'proposal-options';
+  ['Option A: Scalable Classroom Tool', 'Option B: Pilot Study with Analytics', 'Option C: Curriculum-Integrated ePortfolio'].forEach((label, i) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'secondary';
+    btn.textContent = label;
+    btn.addEventListener('click', () => selectProposalOption(i));
+    opts.appendChild(btn);
+  });
+  agentOptions.appendChild(opts);
+
+  const follow = document.createElement('div');
+  follow.id = 'agent2-followup';
+  agentOptions.appendChild(follow);
+});
+
+function selectProposalOption(index) {
+  const follow = document.getElementById('agent2-followup');
+  follow.innerHTML = '';
+  const h = document.createElement('h4');
+  h.textContent = `You selected option ${String.fromCharCode(65 + index)}`;
+  follow.appendChild(h);
+  const p = document.createElement('p');
+  p.textContent = 'Would you like a short draft describing this option, a longer draft, or a bullet outline?';
+  follow.appendChild(p);
+  ['Short draft', 'Long draft', 'Bullet outline'].forEach((label) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'secondary';
+    b.textContent = label;
+    b.addEventListener('click', () => generateProposalDraft(index, label));
+    follow.appendChild(b);
+  });
+}
+
+function generateProposalDraft(index, variant) {
+  const follow = document.getElementById('agent2-followup');
+  follow.innerHTML = `<h4>Draft (${variant})</h4><p>Generating a ${variant.toLowerCase()} for option ${String.fromCharCode(65 + index)}...</p>`;
+  // placeholder content — in real app we'd call server
+  setTimeout(() => {
+    const content = `Proposal ${String.fromCharCode(65 + index)} (${variant})\n\nSummary based on your answers:\n` + agentAnswers.map(a => `${a.question}: ${a.answer}`).join('\n');
+    const pre = document.createElement('pre');
+    pre.textContent = content;
+    follow.innerHTML = '';
+    follow.appendChild(pre);
+  }, 700);
+}
+
+function generateImprovements(text) {
+  // produce 10 generic improvement ideas based on the assignment text
+  const base = text || 'the assignment';
+  return [
+    `Add AI-driven formative feedback during drafting for ${base}`,
+    `Integrate automated rubric-aligned scoring for quick instructor review of ${base}`,
+    `Use peer-review with AI moderation to scale feedback for ${base}`,
+    `Embed scaffolded prompts and exemplars inside ${base}`,
+    `Capture student reflections and ePortfolios linked to ${base}`,
+    `Add small low-stakes checks with instant AI hints for ${base}`,
+    `Use analytics dashboards to monitor student progress on ${base}`,
+    `Incorporate multimodal submissions (audio/video) with automated transcripts for ${base}`,
+    `Design adaptive pathways where AI recommends next tasks based on ${base}`,
+    `Pilot an opt-in study to compare AI-assisted vs traditional ${base}`
+  ];
+}
+
+// start agent on load
+startAgent();
 
 // ========== AUTOFILL FUNCTIONALITY FOR DEMO ==========
 
