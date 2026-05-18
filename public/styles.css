@@ -65,6 +65,30 @@ h3 {
   animation: rise-in 500ms ease;
 }
 
+.hero-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-img {
+  width: 96px;
+  height: auto;
+  display: block;
+}
+
+.hero-title h1 {
+  font-size: 1.8rem;
+  margin: 0;
+  line-height: 1.05;
+}
+
 .eyebrow {
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -608,6 +632,14 @@ dialog::backdrop {
 @media (max-width: 700px) {
   .hero {
     margin-top: 1.2rem;
+  }
+
+  .logo-img {
+    width: 64px;
+  }
+
+  .hero-title h1 {
+    font-size: 1.2rem;
   }
 
   .phase {
