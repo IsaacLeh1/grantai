@@ -488,9 +488,43 @@ agentSatisfiedBtn?.addEventListener('click', () => {
   const h = document.createElement('h3');
   h.textContent = 'Agent Summary & Proposal Options';
   agentOptions.appendChild(h);
-  const pre = document.createElement('pre');
-  pre.textContent = summary || 'No answers collected.';
-  agentOptions.appendChild(pre);
+  // Build a two-column summary table: Question | Answer
+  const table = document.createElement('table');
+  table.className = 'agent-summary-table';
+  const tbody = document.createElement('tbody');
+
+  if (agentAnswers && agentAnswers.length) {
+    agentAnswers.forEach((a) => {
+      const tr = document.createElement('tr');
+      const th = document.createElement('th');
+      th.textContent = a.question || '';
+      const td = document.createElement('td');
+      td.textContent = a.answer || '';
+      tr.appendChild(th);
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+    });
+  } else {
+    // Example rows when no real answers are available
+    const exampleRows = [
+      { q: 'Course', a: 'ENG 201 - Technical Writing' },
+      { q: 'Assignment', a: 'Drafting and peer-review cycles for technical report deliverables' },
+      { q: 'Goals', a: 'Improve drafting quality, increase revision iterations, align feedback to rubric criteria' }
+    ];
+    exampleRows.forEach((r) => {
+      const tr = document.createElement('tr');
+      const th = document.createElement('th');
+      th.textContent = r.q;
+      const td = document.createElement('td');
+      td.textContent = r.a;
+      tr.appendChild(th);
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+    });
+  }
+
+  table.appendChild(tbody);
+  agentOptions.appendChild(table);
 
   const prompt = document.createElement('p');
   prompt.textContent = 'Any desired changes or additions? If satisfied, choose one of three proposal directions below.';
