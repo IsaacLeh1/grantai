@@ -297,6 +297,7 @@ const agentSendResults = document.getElementById('agent-send-results');
 const agentSatisfiedBtn = document.getElementById('agent-satisfied');
 const agentClearBtn = document.getElementById('agent-clear');
 const agentOptions = document.getElementById('agent-options');
+const agentPopulateExecuteBtn = document.getElementById('agent-populate-execute');
 
 const agentQuestions = [
   'Please upload your syllabus (PDF or Word).',
@@ -414,6 +415,10 @@ agentSendResults?.addEventListener('click', () => {
   URL.revokeObjectURL(url);
 });
 
+agentPopulateExecuteBtn?.addEventListener('click', () => {
+  populateExecuteFromAnswers();
+});
+
 agentClearBtn?.addEventListener('click', () => {
   startAgent();
   agentOptions.innerHTML = '';
@@ -451,6 +456,13 @@ agentSatisfiedBtn?.addEventListener('click', () => {
   const follow = document.createElement('div');
   follow.id = 'agent2-followup';
   agentOptions.appendChild(follow);
+  // also offer quick populate to Section 3
+  const populateQuick = document.createElement('button');
+  populateQuick.type = 'button';
+  populateQuick.className = 'secondary';
+  populateQuick.textContent = 'Populate Section 3 from answers';
+  populateQuick.addEventListener('click', () => populateExecuteFromAnswers());
+  agentOptions.appendChild(populateQuick);
 });
 
 function selectProposalOption(index) {
@@ -504,6 +516,41 @@ function generateImprovements(text) {
 
 // start agent on load
 startAgent();
+
+function populateExecuteFromAnswers() {
+  if (!executeForm) return;
+  // Map answers to execute form boxes
+  const answerMap = {};
+  agentAnswers.forEach(a => {
+    const q = a.question || '';
+    const ans = a.answer || '';
+    if (q.includes('class') && !answerMap.box1) answerMap.box1 = ans;
+    if (q.includes('professor') && !answerMap.box1) answerMap.box1 = ans;
+    if (q.includes('assignments') && !answerMap.box2) answerMap.box2 = ans;
+    if (q.includes('assessments') && !answerMap.box2) answerMap.box2 = ans;
+    if (q.includes('student learning outcomes') && !answerMap.box4) answerMap.box4 = ans;
+    if (q.includes('measure improvement') && !answerMap.box4) answerMap.box4 = ans;
+    if (q.includes('software') && !answerMap.box6) answerMap.box6 = ans;
+    if (q.includes('budget') && !answerMap.box5) answerMap.box5 = ans;
+    if (q.includes('population') && !answerMap.box1) answerMap.box1 = (answerMap.box1 ? answerMap.box1 + ' | ' : '') + ans;
+    if (q.includes('semester') && !answerMap.timeline) answerMap.timeline = ans;
+  });
+
+  // Fallbacks: use combined answers to populate box3 (what you want to build)
+  const course = answerMap.box1 || (agentAnswers[1] && agentAnswers[1].answer) || '';
+  const assignment = answerMap.box2 || (agentAnswers[2] && agentAnswers[2].answer) || '';
+  const outcomes = answerMap.box4 || (agentAnswers[3] && agentAnswers[3].answer) || '';
+
+  if (course) executeForm.elements['box1'].value = course;
+  if (assignment) executeForm.elements['box2'].value = assignment;
+  const builtIdea = `AI enhancement to ${assignment} in ${course} to improve: ${outcomes}`;
+  executeForm.elements['box3'].value = builtIdea;
+  if (outcomes) executeForm.elements['box4'].value = outcomes;
+  if (answerMap.box5) executeForm.elements['box5'].value = answerMap.box5;
+  if (answerMap.box6) executeForm.elements['box6'].value = answerMap.box6;
+
+  appendAgentMessage('Section 3 populated with answers. Review and edit boxes as needed.');
+}
 
 // ========== AUTOFILL FUNCTIONALITY FOR DEMO ==========
 
