@@ -127,6 +127,18 @@ h3 {
   border-color: transparent;
   box-shadow: 0 6px 16px rgba(16,185,129,0.18);
 }
+
+/* Hide the "I'm Satisfied" button until the agent flow marks it ready */
+#agent-satisfied {
+  display: none;
+}
+
+#agent-satisfied.ready {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.8rem;
+}
 .proposal-options button { margin-right:8px; margin-top:8px; }
 .phase-tabs {
   max-width: 1600px;
