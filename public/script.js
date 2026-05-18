@@ -318,6 +318,15 @@ const agentQuestions = [
 let agentAnswers = [];
 let currentQuestionIndex = 0;
 
+// When a file is selected, remove the initial required message immediately
+if (syllabusUpload) {
+  syllabusUpload.addEventListener('change', () => {
+    if (syllabusUpload.files && syllabusUpload.files.length && agentStatus) {
+      agentStatus.textContent = '';
+    }
+  });
+}
+
 function appendAgentMessage(text) {
   const div = document.createElement('div');
   div.className = 'agent-msg bot';
@@ -370,6 +379,8 @@ agentInputForm?.addEventListener('submit', async (e) => {
       return;
     }
     appendUserMessage(file.name);
+    // Clear the initial instruction now that a syllabus has been provided
+    if (agentStatus) agentStatus.textContent = '';
     // attempt to upload if server endpoint exists; fall back to recording filename
     let recordedName = file.name;
     try {
