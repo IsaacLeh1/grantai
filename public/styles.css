@@ -86,7 +86,7 @@ h3 {
 }
 
 .hero-title h1 {
-  font-size: 3rem;
+  font-size: 6rem;
   margin: 0;
   line-height: 1.02;
   font-weight: 700;
@@ -647,7 +647,7 @@ dialog::backdrop {
   }
 
   .hero-title h1 {
-    font-size: 1.8rem;
+    font-size: 3.6rem;
   }
 
   .phase {
