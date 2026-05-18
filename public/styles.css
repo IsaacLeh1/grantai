@@ -81,6 +81,7 @@ h3 {
 
 /* Small styles for the agent chat */
 .agent-chat { max-height: 420px; overflow:auto; padding:12px; border:1px solid #e5e7eb; background:#fff; margin-bottom:8px; display:flex; flex-direction:column; gap:10px; }
+.agent-messages { display:flex; flex-direction:column; gap:10px; }
 .agent-msg { padding:8px 10px; margin:6px 0; border-radius:6px; }
 .agent-msg.bot { background:#f1f5f9; color:#0f172a; }
 .agent-msg.user { background:#dbeafe; color:#0b1220; text-align:right; }

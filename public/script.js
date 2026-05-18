@@ -289,6 +289,7 @@ loadSoftware().catch(() => {
 
 // ========== AGENTIC Q&A (Section 2) ==========
 const agentChat = document.getElementById('agent-chat');
+const agentMessages = document.getElementById('agent-messages');
 const agentInputForm = document.getElementById('agent-input-form');
 const agentTextInput = document.getElementById('agent-text-input');
 const syllabusUpload = document.getElementById('syllabus-upload');
@@ -321,7 +322,7 @@ function appendAgentMessage(text) {
   const div = document.createElement('div');
   div.className = 'agent-msg bot';
   div.textContent = text;
-  agentChat.appendChild(div);
+  agentMessages.appendChild(div);
   agentChat.scrollTop = agentChat.scrollHeight;
 }
 
@@ -329,12 +330,12 @@ function appendUserMessage(text) {
   const div = document.createElement('div');
   div.className = 'agent-msg user';
   div.textContent = text;
-  agentChat.appendChild(div);
+  agentMessages.appendChild(div);
   agentChat.scrollTop = agentChat.scrollHeight;
 }
 
 function startAgent() {
-  agentChat.innerHTML = '';
+  agentMessages.innerHTML = '';
   agentAnswers = [];
   currentQuestionIndex = 0;
   showQuestion(currentQuestionIndex);
@@ -387,7 +388,7 @@ agentInputForm?.addEventListener('submit', (e) => {
       li.textContent = it;
       ul.appendChild(li);
     });
-    agentChat.appendChild(ul);
+    agentMessages.appendChild(ul);
     appendAgentMessage('Would you like to learn more about any of these? If so, name the number or say "no".');
     agentChat.scrollTop = agentChat.scrollHeight;
     // keep at same question index to allow follow-up
