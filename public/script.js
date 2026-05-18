@@ -677,18 +677,13 @@ function generateImprovements(text) {
 }
 
 function generateGrantIdeas() {
-  const course = (agentAnswers[1] && agentAnswers[1].answer) || '';
-  const assignment = (agentAnswers[2] && agentAnswers[2].answer) || '';
-  const outcomes = (agentAnswers[3] && agentAnswers[3].answer) || '';
-  const contextSnippet = `${assignment ? 'for the assignment: ' + assignment : ''}${course ? ' in ' + course : ''}`;
-
   return [
-    `Pilot an AI-driven formative feedback tool ${contextSnippet} to improve ${outcomes || 'student learning outcomes'}.`,
-    `Develop an automated rubric-scoring pipeline ${contextSnippet} so instructors can scale feedback and compare rubric-aligned results across sections.`,
-    `Create an AI-assisted peer review workflow ${contextSnippet} that provides guided comments and revision suggestions to increase draft quality.`,
-    `Build analytics dashboards ${course ? 'for ' + course : ''} that track student progress, common misconceptions, and intervention opportunities tied to ${outcomes || 'assessment metrics'}.`,
-    `Design an ePortfolio + reflection study ${contextSnippet} to capture longitudinal learning gains and showcase student work for assessment.`,
-    `Run a small randomized pilot comparing AI-supported vs traditional feedback ${contextSnippet} to measure impact on rubric scores and completion rates.`
+    'Pilot an AI-driven formative feedback tool for the assignment: t in t to improve t.',
+    'Develop an automated rubric-scoring pipeline for the assignment: t in t so instructors can scale feedback and compare rubric-aligned results across sections.',
+    'Create an AI-assisted peer review workflow for the assignment: t in t that provides guided comments and revision suggestions to increase draft quality.',
+    'Build analytics dashboards for t that track student progress, common misconceptions, and intervention opportunities tied to t.',
+    'Design an ePortfolio + reflection study for the assignment: t in t to capture longitudinal learning gains and showcase student work for assessment.',
+    'Run a small randomized pilot comparing AI-supported vs traditional feedback for the assignment: t in t to measure impact on rubric scores and completion rates.'
   ];
 }
 
