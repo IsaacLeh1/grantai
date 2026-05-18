@@ -578,6 +578,17 @@ agentSatisfiedBtn?.addEventListener('click', () => {
   ideasMessages.className = 'agent-messages';
   ideasChat.appendChild(ideasMessages);
 
+  // Make the ideas pane behave like a conversational AI
+  const botIntro = document.createElement('div');
+  botIntro.className = 'agent-msg bot';
+  botIntro.textContent = 'AI: Hi — I can expand ideas, draft proposals, or suggest next steps. Click an idea or type a question below.';
+  ideasMessages.appendChild(botIntro);
+
+  function aiExplainIdea(text) {
+    // Provide a short, friendly AI-style expansion for a clicked idea
+    return `AI: Brief expansion on "${text}":\n- Purpose: Clarify goals and outcomes.\n- Next steps: outline scope, identify measurements, and draft a short pilot plan.`;
+  }
+
   const ideasComposer = document.createElement('form');
   ideasComposer.className = 'agent-composer';
   const ideasInput = document.createElement('input');
@@ -595,19 +606,22 @@ agentSatisfiedBtn?.addEventListener('click', () => {
   Array.from(ideasList.children).forEach((li) => {
     li.style.cursor = 'pointer';
     li.addEventListener('click', () => {
-      ideasInput.value = li.textContent;
-      // optionally show the clicked idea as a bot hint in messages area
-      const hint = document.createElement('div');
-      hint.className = 'agent-msg bot';
-      hint.textContent = 'Selected idea:';
-      const msg = document.createElement('div');
-      msg.className = 'agent-msg user';
-      msg.textContent = li.textContent;
-      // clear previous messages and show selection
-      ideasMessages.innerHTML = '';
-      ideasMessages.appendChild(hint);
-      ideasMessages.appendChild(msg);
+      const text = li.textContent;
+      ideasInput.value = text;
+      // show user selection in chat
+      const userMsg = document.createElement('div');
+      userMsg.className = 'agent-msg user';
+      userMsg.textContent = text;
+      // append user message and then a simulated AI reply
+      ideasMessages.appendChild(userMsg);
       ideasChat.scrollTop = ideasChat.scrollHeight;
+      setTimeout(() => {
+        const bot = document.createElement('div');
+        bot.className = 'agent-msg bot';
+        bot.textContent = aiExplainIdea(text);
+        ideasMessages.appendChild(bot);
+        ideasChat.scrollTop = ideasChat.scrollHeight;
+      }, 600);
     });
   });
 
@@ -622,6 +636,14 @@ agentSatisfiedBtn?.addEventListener('click', () => {
     ideasMessages.appendChild(userMsg);
     ideasInput.value = '';
     ideasChat.scrollTop = ideasChat.scrollHeight;
+    // simulated AI reply
+    setTimeout(() => {
+      const bot = document.createElement('div');
+      bot.className = 'agent-msg bot';
+      bot.textContent = `AI: Thanks — I can draft a short proposal, a longer draft, or a bullet outline for: ${val}`;
+      ideasMessages.appendChild(bot);
+      ideasChat.scrollTop = ideasChat.scrollHeight;
+    }, 700);
   });
 
   agentOptions.appendChild(ideasChat);
