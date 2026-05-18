@@ -357,17 +357,31 @@ function showQuestion(idx) {
 
 agentInputForm?.addEventListener('submit', (e) => {
   e.preventDefault();
+
+  // Syllabus upload (first question)
   if (currentQuestionIndex === 0) {
     const file = syllabusUpload.files && syllabusUpload.files[0];
-    appendAgentMessage('All questions complete. When ready, click "I\'m Satisfied (Next Agent)" to review a summary and choose proposal options, or is there anything else you would like to change within your responses?');
-    // indicate the next step by making the satisfied button visually prominent
-    if (agentSatisfiedBtn) {
-      agentSatisfiedBtn.classList.add('ready');
-    }
-      appendAgentMessage('Please choose a file to upload or click Send Answer to skip.');
+    if (!file) {
+      appendAgentMessage('Please choose a file to upload or click the composer to skip.');
       return;
     }
+    appendUserMessage(file.name);
+    agentAnswers.push({ question: agentQuestions[0], answer: file.name });
+    // pretend upload — real upload would POST the file
+    currentQuestionIndex++;
+    showQuestion(currentQuestionIndex);
+    syllabusUpload.value = '';
+    return;
+  }
 
+  // Text answers for subsequent questions
+  const text = agentTextInput.value.trim();
+  if (!text) return;
+  appendUserMessage(text);
+  agentAnswers.push({ question: agentQuestions[currentQuestionIndex], answer: text });
+  agentTextInput.value = '';
+
+  // After answering the 'assignments' question (index 2), offer improvements
   if (currentQuestionIndex === 2) {
     const improvements = generateImprovements(text);
     appendAgentMessage('Here are 10 possible ways to improve that assignment:');
@@ -380,17 +394,20 @@ agentInputForm?.addEventListener('submit', (e) => {
     agentMessages.appendChild(ul);
     appendAgentMessage('Would you like to learn more about any of these? If so, name the number or say "no".');
     agentChat.scrollTop = agentChat.scrollHeight;
-    // keep at same question index to allow follow-up
     currentQuestionIndex++;
     showQuestion(currentQuestionIndex);
     return;
   }
 
+  // Advance to next question or finish
   currentQuestionIndex++;
   if (currentQuestionIndex < agentQuestions.length) {
     showQuestion(currentQuestionIndex);
   } else {
-    appendAgentMessage('All questions complete. When ready, click "I\'m Satisfied (Next Agent)" to review a summary and choose proposal options, or is there anything else you would like to change within your responses?');
+    appendAgentMessage('All questions complete. When ready, click "I\'m Satisfied (Next Agent)" to review a summary and choose proposal options.');
+    if (agentSatisfiedBtn) {
+      agentSatisfiedBtn.classList.add('ready');
+    }
   }
 });
 
