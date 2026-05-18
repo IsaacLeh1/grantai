@@ -471,8 +471,18 @@ agentSatisfiedBtn?.addEventListener('click', () => {
   if (agentSatisfiedBtn) {
     agentSatisfiedBtn.classList.remove('ready');
   }
+  // Clear the agent chat area so Agent 2 can present the summary cleanly
+  if (agentMessages) {
+    agentMessages.innerHTML = '';
+  }
   // Agent 2: summarize and offer 3 proposal options
-  const summary = agentAnswers.map(a => `- ${a.question} → ${a.answer}`).join('\n');
+  let summary = agentAnswers.map(a => `- ${a.question} → ${a.answer}`).join('\n');
+  // If no answers collected (or during offline/demo), provide an example summary
+  if (!summary || !summary.trim()) {
+    summary = `Example summary:\n- Course: ENG 201 - Technical Writing\n- Assignment: Drafting and peer-review cycles for technical report deliverables\n- Goals: Improve drafting quality, increase revision iterations, align feedback to rubric criteria.`;
+  }
+  // Make the Agent 2 panel visible and populate it
+  setPanelVisible(agentOptions, true);
   agentOptions.setAttribute('aria-hidden', 'false');
   agentOptions.innerHTML = '';
   const h = document.createElement('h3');
