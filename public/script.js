@@ -508,6 +508,19 @@ agentSatisfiedBtn?.addEventListener('click', () => {
   populateQuick.textContent = 'Populate Section 3 from answers';
   populateQuick.addEventListener('click', () => populateExecuteFromAnswers());
   agentOptions.appendChild(populateQuick);
+
+  // Provide personalized grant ideas based on collected answers
+  const ideas = generateGrantIdeas();
+  const ideasH = document.createElement('h4');
+  ideasH.textContent = 'Grant ideas you could pursue';
+  agentOptions.appendChild(ideasH);
+  const ideasList = document.createElement('ul');
+  ideas.forEach((it) => {
+    const li = document.createElement('li');
+    li.textContent = it;
+    ideasList.appendChild(li);
+  });
+  agentOptions.appendChild(ideasList);
 });
 
 function selectProposalOption(index) {
@@ -556,6 +569,22 @@ function generateImprovements(text) {
     `8. Incorporate multimodal submissions (audio/video) with automated transcripts for ${base}`,
     `9. Design adaptive pathways where AI recommends next tasks based on ${base}`,
     `10. Pilot an opt-in study to compare AI-assisted vs traditional ${base}`
+  ];
+}
+
+function generateGrantIdeas() {
+  const course = (agentAnswers[1] && agentAnswers[1].answer) || '';
+  const assignment = (agentAnswers[2] && agentAnswers[2].answer) || '';
+  const outcomes = (agentAnswers[3] && agentAnswers[3].answer) || '';
+  const contextSnippet = `${assignment ? 'for the assignment: ' + assignment : ''}${course ? ' in ' + course : ''}`;
+
+  return [
+    `Pilot an AI-driven formative feedback tool ${contextSnippet} to improve ${outcomes || 'student learning outcomes'}.`,
+    `Develop an automated rubric-scoring pipeline ${contextSnippet} so instructors can scale feedback and compare rubric-aligned results across sections.`,
+    `Create an AI-assisted peer review workflow ${contextSnippet} that provides guided comments and revision suggestions to increase draft quality.`,
+    `Build analytics dashboards ${course ? 'for ' + course : ''} that track student progress, common misconceptions, and intervention opportunities tied to ${outcomes || 'assessment metrics'}.`,
+    `Design an ePortfolio + reflection study ${contextSnippet} to capture longitudinal learning gains and showcase student work for assessment.`,
+    `Run a small randomized pilot comparing AI-supported vs traditional feedback ${contextSnippet} to measure impact on rubric scores and completion rates.`
   ];
 }
 
