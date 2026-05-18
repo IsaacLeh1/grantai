@@ -474,6 +474,11 @@ agentSatisfiedBtn?.addEventListener('click', () => {
   // Clear the agent chat area so Agent 2 can present the summary cleanly
   if (agentMessages) {
     agentMessages.innerHTML = '';
+    // Ask for desired changes/additions in the agent chat
+    appendAgentMessage('Any desired changes or additions?');
+    // Also echo the generated ideas into the agent chat so the user sees them in context
+    const ideasForChat = generateGrantIdeas();
+    ideasForChat.forEach((idea) => appendAgentMessage(idea));
   }
   // Agent 2: summarize and offer 3 proposal options
   let summary = agentAnswers.map(a => `- ${a.question} → ${a.answer}`).join('\n');
