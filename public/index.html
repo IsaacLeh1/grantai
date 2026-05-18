@@ -47,23 +47,24 @@
         <p>Answer simple questions one at a time. The AI agent will guide you and collect what we need.</p>
 
         <div id="agent-area" class="panel-form">
-          <div id="agent-chat" class="agent-chat" aria-live="polite"></div>
+          <div id="agent-chat" class="agent-chat" aria-live="polite">
+            <form id="agent-input-form" class="agent-composer" autocomplete="off">
+              <label id="file-upload-label" class="agent-file-upload" style="display:none;">
+                Upload syllabus
+                <input id="syllabus-upload" type="file" name="syllabus" accept=".pdf,.doc,.docx" />
+              </label>
 
-          <form id="agent-input-form" class="agent-input" autocomplete="off">
-            <label id="file-upload-label" style="display:none;">
-              Upload syllabus
-              <input id="syllabus-upload" type="file" name="syllabus" accept=".pdf,.doc,.docx" />
-            </label>
+              <input id="agent-text-input" type="text" placeholder="Type your answer here..." />
+              <button type="submit" class="agent-send" aria-label="Send answer">→</button>
+            </form>
+          </div>
 
-            <input id="agent-text-input" type="text" placeholder="Type your answer here..." />
-            <div class="inline-actions">
-              <button type="submit" class="cta">Send Answer</button>
-              <button type="button" id="agent-send-results" class="secondary">Send Results</button>
-              <button type="button" id="agent-populate-execute" class="secondary">Populate Section 3</button>
-              <button type="button" id="agent-satisfied" class="secondary">I'm Satisfied (Next Agent)</button>
-              <button type="button" id="agent-clear" class="secondary">Clear</button>
-            </div>
-          </form>
+          <div class="inline-actions agent-actions">
+            <button type="button" id="agent-send-results" class="secondary">Send Results</button>
+            <button type="button" id="agent-populate-execute" class="secondary">Populate Section 3</button>
+            <button type="button" id="agent-satisfied" class="secondary">I'm Satisfied (Next Agent)</button>
+            <button type="button" id="agent-clear" class="secondary">Clear</button>
+          </div>
 
           <div id="agent-options" class="output-panel" aria-hidden="true"></div>
         </div>
