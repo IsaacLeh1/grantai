@@ -565,6 +565,61 @@ agentSatisfiedBtn?.addEventListener('click', () => {
     ideasList.appendChild(li);
   });
   agentOptions.appendChild(ideasList);
+
+  // Add an ideas chatbox beneath the summary table where clicked ideas populate the input
+  const ideasChat = document.createElement('div');
+  ideasChat.className = 'agent-chat ideas-chat';
+  const ideasMessages = document.createElement('div');
+  ideasMessages.className = 'agent-messages';
+  ideasChat.appendChild(ideasMessages);
+
+  const ideasComposer = document.createElement('form');
+  ideasComposer.className = 'agent-composer';
+  const ideasInput = document.createElement('input');
+  ideasInput.type = 'text';
+  ideasInput.placeholder = 'Selected idea appears here. Edit or send to record it.';
+  const ideasSend = document.createElement('button');
+  ideasSend.type = 'submit';
+  ideasSend.className = 'agent-send';
+  ideasSend.textContent = '→';
+  ideasComposer.appendChild(ideasInput);
+  ideasComposer.appendChild(ideasSend);
+  ideasChat.appendChild(ideasComposer);
+
+  // Clicking an idea places it into the composer input
+  Array.from(ideasList.children).forEach((li) => {
+    li.style.cursor = 'pointer';
+    li.addEventListener('click', () => {
+      ideasInput.value = li.textContent;
+      // optionally show the clicked idea as a bot hint in messages area
+      const hint = document.createElement('div');
+      hint.className = 'agent-msg bot';
+      hint.textContent = 'Selected idea:';
+      const msg = document.createElement('div');
+      msg.className = 'agent-msg user';
+      msg.textContent = li.textContent;
+      // clear previous messages and show selection
+      ideasMessages.innerHTML = '';
+      ideasMessages.appendChild(hint);
+      ideasMessages.appendChild(msg);
+      ideasChat.scrollTop = ideasChat.scrollHeight;
+    });
+  });
+
+  // Sending appends the message to the ideas messages area
+  ideasComposer.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const val = ideasInput.value.trim();
+    if (!val) return;
+    const userMsg = document.createElement('div');
+    userMsg.className = 'agent-msg user';
+    userMsg.textContent = val;
+    ideasMessages.appendChild(userMsg);
+    ideasInput.value = '';
+    ideasChat.scrollTop = ideasChat.scrollHeight;
+  });
+
+  agentOptions.appendChild(ideasChat);
 });
 
 function selectProposalOption(index) {
