@@ -7,13 +7,13 @@
       "weightPercent": 15,
       "description": "Use of AI Supports:",
       "levels": {
-        "exemplary": "Integration of AI into classes with 300+ students",
-        "proficient": "Integration of AI into classes with 200+ students",
-        "developing": "Integration of AI into classes with 100+ students",
-        "beginning": "Integration of AI into classes with 50+ students",
-        "small": "Integration of AI with between 25 and 50 students.",
-        "zero": "Less than 25 students impacted."
-      }
+          "exemplary": { "text": "Integration of AI into classes with 300+ students", "points": 4 },
+          "proficient": { "text": "Integration of AI into classes with 200+ students", "points": 3 },
+          "developing": { "text": "Integration of AI into classes with 100+ students", "points": 2 },
+          "beginning": { "text": "Integration of AI into classes with 50+ students", "points": 1 },
+          "small": { "text": "Integration of AI with between 25 and 50 students.", "points": 0.5 },
+          "zero": { "text": "Less than 25 students impacted.", "points": 0 }
+        }
     },
     {
       "id": "qualitative-impact",
@@ -21,11 +21,11 @@
       "weightPercent": 15,
       "description": "Use of AI Supports:",
       "levels": {
-        "exemplary": "Every student completes a sustained engagement (10+ contact hours across the term) with an external organization in their discipline, producing a deliverable the organization adopts or uses. Engagement includes direct interaction with practitioners, scoped work, and structured feedback. Student impact on the organization is documented (artifact, testimonial, or measurable outcome).",
-        "proficient": "Every student completes at least one substantive engagement (5+ contact hours) with an external organization in their discipline, producing work reviewed by a practitioner. Roles, deliverables, and expectations are defined in advance.",
-        "developing": "Every student has at least one direct interaction with an external organization tied to their discipline (e.g., site visit with scoped activity, guest critique of student work, short consultation). Interaction is structured, not passive observation.",
-        "beginning": "Students engage with an authentic case, dataset, or problem sourced from an external organization, but without live practitioner interaction. Simulations alone do not qualify unless built on real, current organizational artifacts.",
-        "zero": "No external organization engagement, or engagement is limited to passive exposure (e.g., guest lecture with no student work product)."
+        "exemplary": { "text": "Every student completes a sustained engagement (10+ contact hours across the term) with an external organization in their discipline, producing a deliverable the organization adopts or uses. Engagement includes direct interaction with practitioners, scoped work, and structured feedback. Student impact on the organization is documented (artifact, testimonial, or measurable outcome).", "points": 4 },
+        "proficient": { "text": "Every student completes at least one substantive engagement (5+ contact hours) with an external organization in their discipline, producing work reviewed by a practitioner. Roles, deliverables, and expectations are defined in advance.", "points": 3 },
+        "developing": { "text": "Every student has at least one direct interaction with an external organization tied to their discipline (e.g., site visit with scoped activity, guest critique of student work, short consultation). Interaction is structured, not passive observation.", "points": 2 },
+        "beginning": { "text": "Students engage with an authentic case, dataset, or problem sourced from an external organization, but without live practitioner interaction. Simulations alone do not qualify unless built on real, current organizational artifacts.", "points": 1 },
+        "zero": { "text": "No external organization engagement, or engagement is limited to passive exposure (e.g., guest lecture with no student work product).", "points": 0 }
       }
     },
     {
@@ -34,9 +34,9 @@
       "weightPercent": 15,
       "description": "",
       "levels": {
-        "exemplary": "DX has already approved any software being asked for",
-        "proficient": "Strong, persuasive evidence is given that DX may approve it very soon. For example, the grant discloses the names of the DX people they have been working with and the steps they have taken, and what the DX people have told them that indicates they are mature in process and within 2 weeks of full approval and 100% functionality.",
-        "developing": "No evidence that DX has or will imminently approve the software required to accomplish the project. Note: This is a potential blocker to approval. If the grant impact depends entirely on a non-replaceable software that is not approved and not ‘about to be approved,’ we can’t give approvals."
+        "exemplary": { "text": "DX has already approved any software being asked for", "points": 4 },
+        "proficient": { "text": "Strong, persuasive evidence is given that DX may approve it very soon. For example, the grant discloses the names of the DX people they have been working with and the steps they have taken, and what the DX people have told them that indicates they are mature in process and within 2 weeks of full approval and 100% functionality.", "points": 3 },
+        "developing": { "text": "No evidence that DX has or will imminently approve the software required to accomplish the project. Note: This is a potential blocker to approval. If the grant impact depends entirely on a non-replaceable software that is not approved and not ‘about to be approved,’ we can’t give approvals.", "points": 1 }
       }
     },
     {
@@ -45,10 +45,10 @@
       "weightPercent": 15,
       "description": "",
       "levels": {
-        "exemplary": "Robust, clearly defined outcomes and methods aligned with durable skills.",
-        "proficient": "Outcomes and methods appropriate but somewhat limited in clarity",
-        "developing": "Loose connection between outcomes and assessment methods",
-        "beginning": "No clear learning outcomes or assessment plan"
+        "exemplary": { "text": "Robust, clearly defined outcomes and methods aligned with durable skills.", "points": 4 },
+        "proficient": { "text": "Outcomes and methods appropriate but somewhat limited in clarity", "points": 3 },
+        "developing": { "text": "Loose connection between outcomes and assessment methods", "points": 2 },
+        "beginning": { "text": "No clear learning outcomes or assessment plan", "points": 1 }
       }
     },
     {
@@ -57,9 +57,9 @@
       "weightPercent": 10,
       "description": "",
       "levels": {
-        "exemplary": "The value of the grant will impact students during the summer 2026 block or Fall 2026 semester.",
-        "proficient": "The value of the grant will impact at least 25% of the students mentioned during the summer 2026 block or Fall 2026 semester, and 100% by Spring 2027.",
-        "developing": "The grant will not impact students at all until Spring 2027 (January of 2027) or later."
+        "exemplary": { "text": "The value of the grant will impact students during the summer 2026 block or Fall 2026 semester.", "points": 4 },
+        "proficient": { "text": "The value of the grant will impact at least 25% of the students mentioned during the summer 2026 block or Fall 2026 semester, and 100% by Spring 2027.", "points": 3 },
+        "developing": { "text": "The grant will not impact students at all until Spring 2027 (January of 2027) or later.", "points": 1 }
       }
     },
     {
@@ -68,9 +68,9 @@
       "weightPercent": 10,
       "description": "",
       "levels": {
-        "exemplary": "Strong plan for continuation and integration beyond the initial grant activity. There is a plan to make the change stick. There is a plan for how they’ll pay for the thing after the initial changes are made, or a way to make the thing cheap or free, or it is a one-time change cost (no continuing cost to maintain the change). For example, the Dean has stated that if they get the grant for proof of concept, then the Dean will finance ongoing operations.",
-        "proficient": "Some potential for continuation; some institutional support identified but seems like it could be wishful thinking.",
-        "developing": "Some mention of sustainability but lacks concrete mechanisms. Or, No clear plan for continuation beyond funding."
+        "exemplary": { "text": "Strong plan for continuation and integration beyond the initial grant activity. There is a plan to make the change stick. There is a plan for how they’ll pay for the thing after the initial changes are made, or a way to make the thing cheap or free, or it is a one-time change cost (no continuing cost to maintain the change). For example, the Dean has stated that if they get the grant for proof of concept, then the Dean will finance ongoing operations.", "points": 4 },
+        "proficient": { "text": "Some potential for continuation; some institutional support identified but seems like it could be wishful thinking.", "points": 3 },
+        "developing": { "text": "Some mention of sustainability but lacks concrete mechanisms. Or, No clear plan for continuation beyond funding.", "points": 1 }
       }
     }
   ],

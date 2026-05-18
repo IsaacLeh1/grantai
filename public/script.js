@@ -145,11 +145,15 @@ async function loadRubric() {
         ? `
           <ul class="level-list">
             ${Object.entries(criterion.levels)
-              .map(([levelKey, levelText]) => `<li><strong>${formatRubricLevelLabel(levelKey)}:</strong> ${levelText || "N/A"}</li>`)
-              .join("")}
+              .map(([levelKey, levelVal]) => {
+                const isObj = typeof levelVal === 'object' && levelVal !== null;
+                const levelText = isObj ? (levelVal.text || '') : (levelVal || '');
+                const points = isObj && (levelVal.points !== undefined) ? ` <span class="level-points">(${levelVal.points} pts)</span>` : '';
+                return `<li><strong>${formatRubricLevelLabel(levelKey)}:</strong> ${escapeHtml(levelText) || "N/A"}${points}</li>`;
+              }).join("")}
           </ul>
         `
-        : `<ul>${(criterion.signals || []).map((signal) => `<li>${signal}</li>`).join("")}</ul>`;
+        : `<ul>${(criterion.signals || []).map((signal) => `<li>${escapeHtml(signal)}</li>`).join("")}</ul>`;
 
       item.innerHTML = `
         <summary>
