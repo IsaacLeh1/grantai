@@ -535,18 +535,6 @@ agentSatisfiedBtn?.addEventListener('click', () => {
   prompt.textContent = 'Any desired changes or additions? If satisfied, choose one of three proposal directions below.';
   agentOptions.appendChild(prompt);
 
-  const opts = document.createElement('div');
-  opts.className = 'proposal-options';
-  ['Option A: Scalable Classroom Tool', 'Option B: Pilot Study with Analytics', 'Option C: Curriculum-Integrated ePortfolio'].forEach((label, i) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'secondary';
-    btn.textContent = label;
-    btn.addEventListener('click', () => selectProposalOption(i));
-    opts.appendChild(btn);
-  });
-  agentOptions.appendChild(opts);
-
   const follow = document.createElement('div');
   follow.id = 'agent2-followup';
   agentOptions.appendChild(follow);
@@ -563,13 +551,7 @@ agentSatisfiedBtn?.addEventListener('click', () => {
   const ideasH = document.createElement('h4');
   ideasH.textContent = 'Grant ideas you could pursue';
   agentOptions.appendChild(ideasH);
-  const ideasList = document.createElement('ul');
-  ideas.forEach((it) => {
-    const li = document.createElement('li');
-    li.textContent = it;
-    ideasList.appendChild(li);
-  });
-  agentOptions.appendChild(ideasList);
+  // Ideas will be rendered by the AI inside the chat pane below
 
   // Add an ideas chatbox beneath the summary table where clicked ideas populate the input
   const ideasChat = document.createElement('div');
@@ -602,17 +584,18 @@ agentSatisfiedBtn?.addEventListener('click', () => {
   ideasComposer.appendChild(ideasSend);
   ideasChat.appendChild(ideasComposer);
 
-  // Clicking an idea places it into the composer input
-  Array.from(ideasList.children).forEach((li) => {
-    li.style.cursor = 'pointer';
-    li.addEventListener('click', () => {
-      const text = li.textContent;
+  // Render AI-provided ideas into the chat area and make them clickable
+  ideas.forEach((it) => {
+    const botIdea = document.createElement('div');
+    botIdea.className = 'agent-msg bot';
+    botIdea.textContent = it;
+    botIdea.style.cursor = 'pointer';
+    botIdea.addEventListener('click', () => {
+      const text = it;
       ideasInput.value = text;
-      // show user selection in chat
       const userMsg = document.createElement('div');
       userMsg.className = 'agent-msg user';
       userMsg.textContent = text;
-      // append user message and then a simulated AI reply
       ideasMessages.appendChild(userMsg);
       ideasChat.scrollTop = ideasChat.scrollHeight;
       setTimeout(() => {
@@ -623,7 +606,24 @@ agentSatisfiedBtn?.addEventListener('click', () => {
         ideasChat.scrollTop = ideasChat.scrollHeight;
       }, 600);
     });
+    ideasMessages.appendChild(botIdea);
   });
+
+  // Put the three proposal option buttons into the AI chat as a bot message
+  const botOptions = document.createElement('div');
+  botOptions.className = 'agent-msg bot';
+  botOptions.style.display = 'flex';
+  botOptions.style.gap = '8px';
+  botOptions.style.flexWrap = 'wrap';
+  ['Option A: Scalable Classroom Tool', 'Option B: Pilot Study with Analytics', 'Option C: Curriculum-Integrated ePortfolio'].forEach((label, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'secondary';
+    b.textContent = label;
+    b.addEventListener('click', () => selectProposalOption(i));
+    botOptions.appendChild(b);
+  });
+  ideasMessages.appendChild(botOptions);
 
   // Sending appends the message to the ideas messages area
   ideasComposer.addEventListener('submit', (e) => {
