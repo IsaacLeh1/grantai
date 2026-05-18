@@ -298,7 +298,6 @@ const agentSendResults = document.getElementById('agent-send-results');
 const agentSatisfiedBtn = document.getElementById('agent-satisfied');
 const agentClearBtn = document.getElementById('agent-clear');
 const agentOptions = document.getElementById('agent-options');
-const agentPopulateExecuteBtn = document.getElementById('agent-populate-execute');
 
 const agentQuestions = [
   'Please upload your syllabus (PDF or Word).',
@@ -360,25 +359,15 @@ agentInputForm?.addEventListener('submit', (e) => {
   e.preventDefault();
   if (currentQuestionIndex === 0) {
     const file = syllabusUpload.files && syllabusUpload.files[0];
-    if (!file) {
+    appendAgentMessage('All questions complete. When ready, click "I\'m Satisfied (Next Agent)" to review a summary and choose proposal options, or is there anything else you would like to change within your responses?');
+    // indicate the next step by making the satisfied button visually prominent
+    if (agentSatisfiedBtn) {
+      agentSatisfiedBtn.classList.add('ready');
+    }
       appendAgentMessage('Please choose a file to upload or click Send Answer to skip.');
       return;
     }
-    appendUserMessage(file.name);
-    agentAnswers.push({question: agentQuestions[0], answer: file.name});
-    // pretend upload: in real app we'd send file to server
-    currentQuestionIndex++;
-    showQuestion(currentQuestionIndex);
-    syllabusUpload.value = '';
-    return;
-  }
 
-  const text = agentTextInput.value.trim();
-  if (!text) return;
-  appendUserMessage(text);
-  agentAnswers.push({question: agentQuestions[currentQuestionIndex], answer: text});
-  agentTextInput.value = '';
-  // after answering assignment question, provide 10 improvement ideas
   if (currentQuestionIndex === 2) {
     const improvements = generateImprovements(text);
     appendAgentMessage('Here are 10 possible ways to improve that assignment:');
@@ -401,7 +390,7 @@ agentInputForm?.addEventListener('submit', (e) => {
   if (currentQuestionIndex < agentQuestions.length) {
     showQuestion(currentQuestionIndex);
   } else {
-    appendAgentMessage('All questions complete. When ready, click "I\'m Satisfied (Next Agent)" to review a summary and choose proposal options, or click "Send Results" to export now.');
+    appendAgentMessage('All questions complete. When ready, click "I\'m Satisfied (Next Agent)" to review a summary and choose proposal options, or is there anything else you would like to change within your responses?');
   }
 });
 
@@ -424,9 +413,16 @@ agentClearBtn?.addEventListener('click', () => {
   startAgent();
   agentOptions.innerHTML = '';
   agentOptions.setAttribute('aria-hidden', 'true');
+  if (agentSatisfiedBtn) {
+    agentSatisfiedBtn.classList.remove('ready');
+  }
 });
 
 agentSatisfiedBtn?.addEventListener('click', () => {
+  // user acknowledged — clear ready state
+  if (agentSatisfiedBtn) {
+    agentSatisfiedBtn.classList.remove('ready');
+  }
   // Agent 2: summarize and offer 3 proposal options
   const summary = agentAnswers.map(a => `- ${a.question} → ${a.answer}`).join('\n');
   agentOptions.setAttribute('aria-hidden', 'false');

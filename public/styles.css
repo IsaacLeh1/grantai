@@ -91,6 +91,12 @@ h3 {
 .agent-send { width:42px; height:42px; border:none; border-radius:999px; background:var(--brand); color:#fff; font-size:1.3rem; line-height:1; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; box-shadow:0 6px 16px rgba(18,76,53,0.18); }
 .agent-send:hover { background:var(--brand-soft); }
 .agent-actions { margin-top:0.6rem; }
+.agent-actions #agent-satisfied.ready {
+  background: #16a34a; /* green */
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 6px 16px rgba(16,185,129,0.18);
+}
 .proposal-options button { margin-right:8px; margin-top:8px; }
 .phase-tabs {
   max-width: 1600px;
