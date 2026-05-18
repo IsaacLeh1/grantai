@@ -560,10 +560,23 @@ agentSatisfiedBtn?.addEventListener('click', () => {
   ideasMessages.className = 'agent-messages';
   ideasChat.appendChild(ideasMessages);
 
-  // Make the ideas pane behave like a conversational AI
+  // Make the ideas pane behave like a conversational AI (single-line replies only)
+  function simplifyMessage(text) {
+    if (!text && text !== 0) return '';
+    if (Array.isArray(text)) text = text.join(' ');
+    text = String(text).trim();
+    // prefer first line or first sentence
+    const firstLine = text.split(/\r?\n/)[0];
+    const firstSentence = firstLine.split(/[.?!]/)[0];
+    let out = firstSentence || firstLine || text;
+    out = out.trim();
+    if (out.length > 160) out = out.slice(0, 157) + '...';
+    return out;
+  }
+
   const botIntro = document.createElement('div');
   botIntro.className = 'agent-msg bot';
-  botIntro.textContent = 'AI: Hi — I can expand ideas, draft proposals, or suggest next steps. Click an idea or type a question below.';
+  botIntro.textContent = 'AI: Click an idea or type a question.';
   ideasMessages.appendChild(botIntro);
 
   async function aiFetchReply(payload) {
@@ -572,12 +585,13 @@ agentSatisfiedBtn?.addEventListener('click', () => {
         method: 'POST',
         body: JSON.stringify(payload)
       });
-      // Expecting { content: string } or { content: [string] }
-      if (!data) return 'AI: (no response)';
-      if (Array.isArray(data.content)) return data.content.join('\n');
-      return data.content || 'AI: (empty response)';
+      if (!data) return 'AI: No response.';
+      const raw = Array.isArray(data.content) ? data.content.join(' ') : (data.content || '');
+      const simple = simplifyMessage(raw);
+      return `AI: ${simple}`;
     } catch (err) {
-      return `AI: (offline) ${err.message}`;
+      // Do not expose raw error text to the chat; provide a concise fallback
+      return 'AI: Showing offline suggestions.';
     }
   }
 
@@ -622,11 +636,12 @@ agentSatisfiedBtn?.addEventListener('click', () => {
         fallback.forEach((it) => ideasArr.push(it));
       }
 
-      // render ideas as bot messages (clickable)
+      // render ideas as bot messages (clickable) with simplified text
       ideasArr.forEach((it) => {
+        const simple = simplifyMessage(it);
         const botIdea = document.createElement('div');
         botIdea.className = 'agent-msg bot';
-        botIdea.textContent = it;
+        botIdea.textContent = `AI: ${simple}`;
         botIdea.style.cursor = 'pointer';
         botIdea.addEventListener('click', async () => {
           const text = it;
@@ -637,10 +652,10 @@ agentSatisfiedBtn?.addEventListener('click', () => {
           ideasMessages.appendChild(userMsg);
           ideasChat.scrollTop = ideasChat.scrollHeight;
 
-          const reply = await aiFetchReply({ type: 'explain', idea: text, answers: agentAnswers });
+          const rawReply = await aiFetchReply({ type: 'explain', idea: text, answers: agentAnswers });
           const bot = document.createElement('div');
           bot.className = 'agent-msg bot';
-          bot.textContent = reply;
+          bot.textContent = rawReply;
           ideasMessages.appendChild(bot);
           ideasChat.scrollTop = ideasChat.scrollHeight;
         });
@@ -668,7 +683,7 @@ agentSatisfiedBtn?.addEventListener('click', () => {
       loading.remove();
       const errMsg = document.createElement('div');
       errMsg.className = 'agent-msg bot';
-      errMsg.textContent = `AI: Unable to fetch ideas — ${err.message}`;
+      errMsg.textContent = 'AI: Showing offline suggestions.';
       ideasMessages.appendChild(errMsg);
       // fallback render static ideas and options
       const fallback = generateGrantIdeas();
