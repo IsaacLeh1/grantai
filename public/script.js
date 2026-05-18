@@ -566,9 +566,19 @@ agentSatisfiedBtn?.addEventListener('click', () => {
   botIntro.textContent = 'AI: Hi — I can expand ideas, draft proposals, or suggest next steps. Click an idea or type a question below.';
   ideasMessages.appendChild(botIntro);
 
-  function aiExplainIdea(text) {
-    // Provide a short, friendly AI-style expansion for a clicked idea
-    return `AI: Brief expansion on "${text}":\n- Purpose: Clarify goals and outcomes.\n- Next steps: outline scope, identify measurements, and draft a short pilot plan.`;
+  async function aiFetchReply(payload) {
+    try {
+      const data = await fetchJSON('/api/ai-reply', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      // Expecting { content: string } or { content: [string] }
+      if (!data) return 'AI: (no response)';
+      if (Array.isArray(data.content)) return data.content.join('\n');
+      return data.content || 'AI: (empty response)';
+    } catch (err) {
+      return `AI: (offline) ${err.message}`;
+    }
   }
 
   const ideasComposer = document.createElement('form');
@@ -584,46 +594,100 @@ agentSatisfiedBtn?.addEventListener('click', () => {
   ideasComposer.appendChild(ideasSend);
   ideasChat.appendChild(ideasComposer);
 
-  // Render AI-provided ideas into the chat area and make them clickable
-  ideas.forEach((it) => {
-    const botIdea = document.createElement('div');
-    botIdea.className = 'agent-msg bot';
-    botIdea.textContent = it;
-    botIdea.style.cursor = 'pointer';
-    botIdea.addEventListener('click', () => {
-      const text = it;
-      ideasInput.value = text;
-      const userMsg = document.createElement('div');
-      userMsg.className = 'agent-msg user';
-      userMsg.textContent = text;
-      ideasMessages.appendChild(userMsg);
-      ideasChat.scrollTop = ideasChat.scrollHeight;
-      setTimeout(() => {
-        const bot = document.createElement('div');
-        bot.className = 'agent-msg bot';
-        bot.textContent = aiExplainIdea(text);
-        ideasMessages.appendChild(bot);
-        ideasChat.scrollTop = ideasChat.scrollHeight;
-      }, 600);
-    });
-    ideasMessages.appendChild(botIdea);
-  });
+  // Fetch ideas and proposal options from API and render them in the chat.
+  async function fetchAndRenderIdeas() {
+    // show a loading bot message
+    const loading = document.createElement('div');
+    loading.className = 'agent-msg bot';
+    loading.textContent = 'AI: Generating ideas...';
+    ideasMessages.appendChild(loading);
+    ideasChat.scrollTop = ideasChat.scrollHeight;
 
-  // Put the three proposal option buttons into the AI chat as a bot message
-  const botOptions = document.createElement('div');
-  botOptions.className = 'agent-msg bot';
-  botOptions.style.display = 'flex';
-  botOptions.style.gap = '8px';
-  botOptions.style.flexWrap = 'wrap';
-  ['Option A: Scalable Classroom Tool', 'Option B: Pilot Study with Analytics', 'Option C: Curriculum-Integrated ePortfolio'].forEach((label, i) => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'secondary';
-    b.textContent = label;
-    b.addEventListener('click', () => selectProposalOption(i));
-    botOptions.appendChild(b);
-  });
-  ideasMessages.appendChild(botOptions);
+    try {
+      const payload = { answers: agentAnswers };
+      const res = await fetchJSON('/api/generate-ideas', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+
+      // remove loading
+      loading.remove();
+
+      const ideasArr = Array.isArray(res.ideas) ? res.ideas : (typeof res.content === 'string' ? res.content.split('\n').filter(Boolean) : []);
+      const optionsArr = Array.isArray(res.options) ? res.options : null;
+
+      if (!ideasArr.length) {
+        // fallback to client-side ideas
+        const fallback = generateGrantIdeas();
+        fallback.forEach((it) => ideasArr.push(it));
+      }
+
+      // render ideas as bot messages (clickable)
+      ideasArr.forEach((it) => {
+        const botIdea = document.createElement('div');
+        botIdea.className = 'agent-msg bot';
+        botIdea.textContent = it;
+        botIdea.style.cursor = 'pointer';
+        botIdea.addEventListener('click', async () => {
+          const text = it;
+          ideasInput.value = text;
+          const userMsg = document.createElement('div');
+          userMsg.className = 'agent-msg user';
+          userMsg.textContent = text;
+          ideasMessages.appendChild(userMsg);
+          ideasChat.scrollTop = ideasChat.scrollHeight;
+
+          const reply = await aiFetchReply({ type: 'explain', idea: text, answers: agentAnswers });
+          const bot = document.createElement('div');
+          bot.className = 'agent-msg bot';
+          bot.textContent = reply;
+          ideasMessages.appendChild(bot);
+          ideasChat.scrollTop = ideasChat.scrollHeight;
+        });
+        ideasMessages.appendChild(botIdea);
+      });
+
+      // render options if provided by API, otherwise fallback to defaults
+      const opts = optionsArr && optionsArr.length ? optionsArr : ['Option A: Scalable Classroom Tool', 'Option B: Pilot Study with Analytics', 'Option C: Curriculum-Integrated ePortfolio'];
+      const botOptions = document.createElement('div');
+      botOptions.className = 'agent-msg bot';
+      botOptions.style.display = 'flex';
+      botOptions.style.gap = '8px';
+      botOptions.style.flexWrap = 'wrap';
+      opts.forEach((label, i) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'secondary';
+        b.textContent = label;
+        b.addEventListener('click', () => selectProposalOption(i));
+        botOptions.appendChild(b);
+      });
+      ideasMessages.appendChild(botOptions);
+
+    } catch (err) {
+      loading.remove();
+      const errMsg = document.createElement('div');
+      errMsg.className = 'agent-msg bot';
+      errMsg.textContent = `AI: Unable to fetch ideas — ${err.message}`;
+      ideasMessages.appendChild(errMsg);
+      // fallback render static ideas and options
+      const fallback = generateGrantIdeas();
+      fallback.forEach((it) => {
+        const botIdea = document.createElement('div');
+        botIdea.className = 'agent-msg bot';
+        botIdea.textContent = it;
+        ideasMessages.appendChild(botIdea);
+      });
+      const botOptions = document.createElement('div');
+      botOptions.className = 'agent-msg bot';
+      botOptions.innerHTML = '<button class="secondary">Option A: Scalable Classroom Tool</button><button class="secondary">Option B: Pilot Study with Analytics</button><button class="secondary">Option C: Curriculum-Integrated ePortfolio</button>';
+      ideasMessages.appendChild(botOptions);
+    }
+    ideasChat.scrollTop = ideasChat.scrollHeight;
+  }
+
+  // kick off idea generation (API or fallback)
+  fetchAndRenderIdeas();
 
   // Sending appends the message to the ideas messages area
   ideasComposer.addEventListener('submit', (e) => {
