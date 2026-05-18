@@ -303,7 +303,7 @@ const agentQuestions = [
   'Please upload your syllabus (PDF or Word).',
   'What class is this, professor name, and brief coursework description?',
   'Which assignments or assessments would you like to enhance with AI? (List them or describe them)',
-  'What specific student learning outcomes do you want to improve?',
+  'If you have your own idea, what specific student learning outcomes do you want to improve?',
   'How will you measure improvement? (rubric scores, exam items, completion rates, etc.)',
   'What is the target student population and typical enrollment size for the course?',
   'When would you implement this (semester/timeline)?',
@@ -501,16 +501,16 @@ function generateImprovements(text) {
   // produce 10 generic improvement ideas based on the assignment text
   const base = text || 'the assignment';
   return [
-    `Add AI-driven formative feedback during drafting for ${base}`,
-    `Integrate automated rubric-aligned scoring for quick instructor review of ${base}`,
-    `Use peer-review with AI moderation to scale feedback for ${base}`,
-    `Embed scaffolded prompts and exemplars inside ${base}`,
-    `Capture student reflections and ePortfolios linked to ${base}`,
-    `Add small low-stakes checks with instant AI hints for ${base}`,
-    `Use analytics dashboards to monitor student progress on ${base}`,
-    `Incorporate multimodal submissions (audio/video) with automated transcripts for ${base}`,
-    `Design adaptive pathways where AI recommends next tasks based on ${base}`,
-    `Pilot an opt-in study to compare AI-assisted vs traditional ${base}`
+    `1. Add AI-driven formative feedback during drafting for ${base}`,
+    `2. Integrate automated rubric-aligned scoring for quick instructor review of ${base}`,
+    `3. Use peer-review with AI moderation to scale feedback for ${base}`,
+    `4. Embed scaffolded prompts and exemplars inside ${base}`,
+    `5. Capture student reflections and ePortfolios linked to ${base}`,
+    `6. Add small low-stakes checks with instant AI hints for ${base}`,
+    `7. Use analytics dashboards to monitor student progress on ${base}`,
+    `8. Incorporate multimodal submissions (audio/video) with automated transcripts for ${base}`,
+    `9. Design adaptive pathways where AI recommends next tasks based on ${base}`,
+    `10. Pilot an opt-in study to compare AI-assisted vs traditional ${base}`
   ];
 }
 
