@@ -86,9 +86,11 @@ h3 {
 }
 
 .hero-title h1 {
-  font-size: 1.8rem;
+  font-size: 3rem;
   margin: 0;
-  line-height: 1.05;
+  line-height: 1.02;
+  font-weight: 700;
+  color: var(--brand);
 }
 
 .eyebrow {
@@ -645,7 +647,7 @@ dialog::backdrop {
   }
 
   .hero-title h1 {
-    font-size: 1.2rem;
+    font-size: 1.8rem;
   }
 
   .phase {
