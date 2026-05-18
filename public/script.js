@@ -298,6 +298,7 @@ const agentSendResults = document.getElementById('agent-send-results');
 const agentSatisfiedBtn = document.getElementById('agent-satisfied');
 const agentClearBtn = document.getElementById('agent-clear');
 const agentOptions = document.getElementById('agent-options');
+const agentStatus = document.getElementById('agent-status');
 
 const agentQuestions = [
   'Please upload your syllabus (PDF or Word).',
@@ -337,6 +338,8 @@ function startAgent() {
   agentMessages.innerHTML = '';
   agentAnswers = [];
   currentQuestionIndex = 0;
+  // Intro message: require syllabus
+  appendAgentMessage('To begin, a syllabus is required.');
   showQuestion(currentQuestionIndex);
 }
 
@@ -375,12 +378,12 @@ agentInputForm?.addEventListener('submit', async (e) => {
       if (res.ok) {
         const data = await res.json().catch(() => ({}));
         recordedName = data.filename || data.path || recordedName;
-        appendAgentMessage('Syllabus uploaded successfully.');
+        if (agentStatus) agentStatus.textContent = 'Syllabus uploaded successfully.';
       } else {
-        appendAgentMessage('Upload endpoint returned an error; saving filename locally.');
+        if (agentStatus) agentStatus.textContent = 'Upload endpoint returned an error; filename saved locally.';
       }
     } catch (err) {
-      appendAgentMessage('Upload not available; saving filename locally.');
+      if (agentStatus) agentStatus.textContent = 'Upload not available; filename saved locally.';
     }
 
     agentAnswers.push({ question: agentQuestions[0], answer: recordedName, fileName: file.name });
