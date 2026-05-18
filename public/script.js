@@ -355,19 +355,35 @@ function showQuestion(idx) {
   }
 }
 
-agentInputForm?.addEventListener('submit', (e) => {
+agentInputForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
 
-  // Syllabus upload (first question)
+  // Syllabus upload (first question) — required
   if (currentQuestionIndex === 0) {
     const file = syllabusUpload.files && syllabusUpload.files[0];
     if (!file) {
-      appendAgentMessage('Please choose a file to upload or click the composer to skip.');
+      appendAgentMessage('Please upload your syllabus — this is required before continuing.');
       return;
     }
     appendUserMessage(file.name);
-    agentAnswers.push({ question: agentQuestions[0], answer: file.name });
-    // pretend upload — real upload would POST the file
+    // attempt to upload if server endpoint exists; fall back to recording filename
+    let recordedName = file.name;
+    try {
+      const fd = new FormData();
+      fd.append('syllabus', file);
+      const res = await fetch('/api/upload-syllabus', { method: 'POST', body: fd });
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        recordedName = data.filename || data.path || recordedName;
+        appendAgentMessage('Syllabus uploaded successfully.');
+      } else {
+        appendAgentMessage('Upload endpoint returned an error; saving filename locally.');
+      }
+    } catch (err) {
+      appendAgentMessage('Upload not available; saving filename locally.');
+    }
+
+    agentAnswers.push({ question: agentQuestions[0], answer: recordedName, fileName: file.name });
     currentQuestionIndex++;
     showQuestion(currentQuestionIndex);
     syllabusUpload.value = '';
