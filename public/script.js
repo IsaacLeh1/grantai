@@ -295,6 +295,7 @@ const agentTextInput = document.getElementById('agent-text-input');
 const syllabusUpload = document.getElementById('syllabus-upload');
 const fileUploadLabel = document.getElementById('file-upload-label');
 const agentSendResults = document.getElementById('agent-send-results');
+const agentPopulateExecuteBtn = document.getElementById('agent-populate-execute');
 const agentSatisfiedBtn = document.getElementById('agent-satisfied');
 const agentClearBtn = document.getElementById('agent-clear');
 const agentOptions = document.getElementById('agent-options');
