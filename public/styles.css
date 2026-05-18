@@ -78,7 +78,7 @@ h3 {
 }
 
 .logo-img {
-  width: 160px;
+  width: 320px;
   height: auto;
   display: block;
 }
@@ -635,7 +635,7 @@ dialog::backdrop {
   }
 
   .logo-img {
-    width: 96px;
+    width: 192px;
   }
 
   .hero-title h1 {
