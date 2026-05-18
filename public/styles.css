@@ -68,7 +68,7 @@ h3 {
 .hero-head {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 .logo-placeholder {
@@ -76,7 +76,9 @@ h3 {
   align-items: center;
   justify-content: center;
 }
-
+.logo-placeholder {
+  margin-left: -36px;
+}
 .logo-img {
   width: 320px;
   height: auto;
@@ -633,9 +635,13 @@ dialog::backdrop {
   .hero {
     margin-top: 1.2rem;
   }
-
   .logo-img {
     width: 192px;
+  }
+
+  .logo-placeholder {
+    margin-left: -12px;
+  }
   }
 
   .hero-title h1 {
