@@ -14,7 +14,16 @@
     <div class="bg-shape bg-two"></div>
 
     <header class="hero">
-      <h1>UVU AI Grant Application</h1>
+      <div class="hero-head">
+        <div class="logo-placeholder" aria-hidden="false">
+          <!-- simple SVG placeholder logo -->
+          <svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img">
+            <rect width="64" height="64" rx="8" fill="#2b6cb0"></rect>
+            <text x="50%" y="54%" font-family="Space Grotesk, sans-serif" font-size="28" fill="#fff" text-anchor="middle" alignment-baseline="middle">G</text>
+          </svg>
+        </div>
+        <h1>UVU AI Grant Application</h1>
+      </div>
     </header>
 
     <main class="container">
@@ -24,6 +33,7 @@
           Please review the following six criteria which will be used to evaluate your grant application: quantitative impact, qualitative impact, software approvals by DX, assessment
           plan, rapid impact, and sustainability.
         </p>
+        <p class="field-hint"><strong>Points included for Rubric Criteria are shown next to level descriptions.</strong></p>
         <div class="rubric-controls" aria-label="Rubric view controls">
           <button type="button" id="expand-rubric" class="secondary">Expand All</button>
           <button type="button" id="collapse-rubric" class="secondary">Collapse All</button>
@@ -33,45 +43,29 @@
       </section>
 
       <section id="explore" class="phase" aria-labelledby="Explore phase">
-        <h2>Explore Grant-Worthy Ideas</h2>
-        <p>Share context and get 3 rubric-aligned project directions.</p>
-        <form id="explore-form" class="panel-form">
-          <label>
-            Idea source
-            <select name="ideaSource">
-              <option value="internal-ai" selected>Internal AI (default)</option>
-              <option value="external-api">External Grant Ideas API</option>
-            </select>
-          </label>
-          <p class="field-hint">Use External API when your grant ideation service is configured on the server.</p>
-          <label>
-            Course context
-            <input type="text" name="course" placeholder="e.g., Biology 101" required />
-          </label>
-          <label>
-            Assignment or assessment focus
-            <input type="text" name="assignment" placeholder="e.g., Lab reflection portfolio" required />
-          </label>
-          <label>
-            Improvement goal
-            <textarea name="goal" rows="3" placeholder="What should improve for students?"></textarea>
-          </label>
-          <label>
-            Budget target
-            <input type="text" name="budget" placeholder="e.g., $4,000" />
-          </label>
-          <label>
-            Known software needs
-            <input type="text" name="software" placeholder="e.g., video annotation + analytics" />
-          </label>
-          <div class="inline-actions">
-            <button type="button" id="autofill-explore" class="secondary">Autofill Demo</button>
-            <button type="button" id="clear-explore" class="secondary">Clear</button>
-            <button type="submit" class="cta">Generate Ideas</button>
-          </div>
-        </form>
+        <h2>Section 2 — Messaging (Agentic Q&A)</h2>
+        <p>Answer simple questions one at a time. The AI agent will guide you and collect what we need.</p>
 
-        <article id="explore-output" class="output-panel" aria-live="polite"></article>
+        <div id="agent-area" class="panel-form">
+          <div id="agent-chat" class="agent-chat" aria-live="polite"></div>
+
+          <form id="agent-input-form" class="agent-input" autocomplete="off">
+            <label id="file-upload-label" style="display:none;">
+              Upload syllabus
+              <input id="syllabus-upload" type="file" name="syllabus" accept=".pdf,.doc,.docx" />
+            </label>
+
+            <input id="agent-text-input" type="text" placeholder="Type your answer here..." />
+            <div class="inline-actions">
+              <button type="submit" class="cta">Send Answer</button>
+              <button type="button" id="agent-send-results" class="secondary">Send Results</button>
+              <button type="button" id="agent-satisfied" class="secondary">I'm Satisfied (Next Agent)</button>
+              <button type="button" id="agent-clear" class="secondary">Clear</button>
+            </div>
+          </form>
+
+          <div id="agent-options" class="output-panel" aria-hidden="true"></div>
+        </div>
       </section>
 
       <section id="execute" class="phase" aria-labelledby="Execute phase">
