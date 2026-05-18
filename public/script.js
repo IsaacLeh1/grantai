@@ -547,8 +547,8 @@ function generateImprovements(text) {
   ];
 }
 
-// start agent on load
-startAgent();
+// start agent on DOM ready
+document.addEventListener('DOMContentLoaded', () => startAgent());
 
 function populateExecuteFromAnswers() {
   if (!executeForm) return;
