@@ -251,20 +251,22 @@ h3 {
 }
 
 .container {
-  max-width: 1400px;
-  margin: 0 auto 3rem;
-  padding: 0 1rem;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 1rem;
   display: grid;
   gap: 1rem;
 }
 
 .phase {
   display: block;
+  width: 100%;
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: 0;
   padding: 1.2rem;
-  box-shadow: var(--shadow);
+  box-shadow: none;
   animation: rise-in 330ms ease;
   scroll-margin-top: 1rem;
 }
@@ -303,7 +305,7 @@ h3 {
 
 .rubric-item {
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 0;
   background: rgba(255, 255, 255, 0.88);
   overflow: hidden;
   display: grid;
@@ -361,7 +363,7 @@ h3 {
 
 .card {
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 0;
   background: rgba(255, 255, 255, 0.88);
   padding: 0.9rem;
 }
@@ -468,7 +470,7 @@ select {
   margin-top: 1rem;
   border-left: 4px solid var(--accent);
   background: rgba(255, 255, 255, 0.92);
-  border-radius: 10px;
+  border-radius: 0;
   padding: 0.8rem;
   min-height: 88px;
 }
