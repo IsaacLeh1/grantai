@@ -103,14 +103,14 @@ h3 {
 }
 
 .logo-img {
-  width: 220px;
+  width: 260px;
   height: auto;
   display: block;
 }
 
 /* reduce logo when inside the right header */
 .nav-wrap .logo-img {
-  width: 140px;
+  width: 180px;
 }
 
 .main-nav {
