@@ -13,6 +13,7 @@ const closeSoftwareChatBtn = document.getElementById("close-software-chat");
 const showSoftwareListBtn = document.getElementById("show-software-list");
 const softwareDialog = document.getElementById("software-dialog");
 const softwareList = document.getElementById("software-list");
+const navWrap = document.querySelector(".nav-wrap");
 
 const chatMessages = document.getElementById("chat-messages");
 const chatForm = document.getElementById("chat-form");
@@ -20,6 +21,37 @@ const chatInput = document.getElementById("chat-input");
 
 let softwareCache = [];
 let currentExecuteAutofill = null;
+
+if (navWrap) {
+  let lastScrollY = window.scrollY;
+  let lastScrollTime = performance.now();
+  let hidden = false;
+
+  const updateNavVisibility = () => {
+    const currentScrollY = window.scrollY;
+    const currentTime = performance.now();
+    const deltaY = currentScrollY - lastScrollY;
+    const deltaTime = Math.max(currentTime - lastScrollTime, 1);
+    const velocity = Math.abs(deltaY) / deltaTime;
+    const scrollingDownFast = deltaY > 18 && velocity > 0.8;
+    const scrollingUp = deltaY < -4;
+
+    if (scrollingDownFast && !hidden && currentScrollY > 0) {
+      navWrap.classList.add("is-hidden");
+      hidden = true;
+    } else if ((scrollingUp || currentScrollY <= 0) && hidden) {
+      navWrap.classList.remove("is-hidden");
+      hidden = false;
+    }
+
+    lastScrollY = currentScrollY;
+    lastScrollTime = currentTime;
+  };
+
+  window.addEventListener("scroll", () => {
+    window.requestAnimationFrame(updateNavVisibility);
+  }, { passive: true });
+}
 
 function setPanelVisible(panel, visible) {
   if (!panel) {
@@ -127,6 +159,7 @@ async function loadRubric() {
   try {
     const rubric = await fetchJSON("/api/rubric");
     rubricGrid.innerHTML = "";
+    const maxTitleLength = Math.max(...rubric.criteria.map((criterion) => String(criterion.name || '').length));
 
     rubric.criteria.forEach((criterion, index) => {
       const item = document.createElement("details");
@@ -157,7 +190,7 @@ async function loadRubric() {
 
       item.innerHTML = `
         <summary>
-          <span class="rubric-title">${criterion.name}</span>
+          <span class="rubric-title">${escapeHtml(String(criterion.name || '')).padEnd(maxTitleLength, '\u00A0')}</span>
           ${weight}
         </summary>
         <div class="rubric-body">
@@ -302,8 +335,7 @@ const agentOptions = document.getElementById('agent-options');
 const agentStatus = document.getElementById('agent-status');
 
 const agentQuestions = [
-  'Please upload your syllabus (PDF or Word).',
-  'What class is this, professor name, and brief coursework description?',
+  'Please upload your syllabus (PDF or Word)',
   'Which assignments or assessments would you like to enhance with AI? (List them or describe them)',
   'If you have your own idea, what specific student learning outcomes do you want to improve?',
   'How will you measure improvement? (rubric scores, exam items, completion rates, etc.)',
@@ -318,6 +350,65 @@ const agentQuestions = [
 
 let agentAnswers = [];
 let currentQuestionIndex = 0;
+
+// Syllabus-only widget (visible before chat)
+const syllabusWidget = document.getElementById('syllabus-widget');
+const syllabusWidgetInput = document.getElementById('syllabus-upload-widget');
+
+if (syllabusWidgetInput && syllabusUpload && agentChat && agentInputForm) {
+  // Create a submit button for the pre-chat syllabus widget (user must click to upload)
+  const syllabusWidgetSubmit = document.createElement('button');
+  syllabusWidgetSubmit.type = 'button';
+  syllabusWidgetSubmit.className = 'secondary';
+  syllabusWidgetSubmit.textContent = 'Submit Syllabus';
+  syllabusWidgetSubmit.style.display = 'none';
+  syllabusWidget.appendChild(syllabusWidgetSubmit);
+
+  syllabusWidgetInput.addEventListener('change', (e) => {
+    const file = syllabusWidgetInput.files && syllabusWidgetInput.files[0];
+    if (!file) {
+      syllabusWidgetSubmit.style.display = 'none';
+      return;
+    }
+    // show the explicit submit button and display the file name in the label
+    syllabusWidgetSubmit.style.display = '';
+    const label = document.getElementById('syllabus-widget-label');
+    if (label) label.childNodes[0].textContent = `Upload syllabus to start (${file.name}) `;
+  });
+
+  syllabusWidgetSubmit.addEventListener('click', async () => {
+    const file = syllabusWidgetInput.files && syllabusWidgetInput.files[0];
+    if (!file) return;
+    // reveal chat and hide widget
+    agentChat.style.display = 'flex';
+    syllabusWidget.style.display = 'none';
+
+    try {
+      appendUserMessage(file.name);
+      let recordedName = file.name;
+      try {
+        const fd = new FormData();
+        fd.append('syllabus', file);
+        const res = await fetch('/api/upload-syllabus', { method: 'POST', body: fd });
+        if (res.ok) {
+          const data = await res.json().catch(() => ({}));
+          recordedName = data.filename || data.path || recordedName;
+        }
+      } catch (err) {
+        console.log('Syllabus upload failed (silently):', err);
+      }
+      const combinedAnswer = recordedName;
+      agentAnswers.push({ question: agentQuestions[0], answer: combinedAnswer, fileName: file.name });
+      currentQuestionIndex++;
+      showQuestion(currentQuestionIndex);
+      syllabusWidgetInput.value = '';
+      syllabusUpload.value = '';
+      agentTextInput.value = '';
+    } catch (err) {
+      console.error('Error handling syllabus widget file:', err);
+    }
+  });
+}
 
 // When a file is selected, remove the initial required message immediately
 if (syllabusUpload) {
@@ -349,7 +440,6 @@ function startAgent() {
   agentAnswers = [];
   currentQuestionIndex = 0;
   // Intro message: require syllabus
-  appendAgentMessage('To begin, a syllabus is required.');
   showQuestion(currentQuestionIndex);
 }
 
@@ -357,10 +447,11 @@ function showQuestion(idx) {
   const q = agentQuestions[idx];
   if (!q) return;
   appendAgentMessage(q);
-  // show file upload only for first question
+  // for first question show both file upload and text input (combined)
   if (idx === 0) {
     fileUploadLabel.style.display = '';
-    agentTextInput.style.display = 'none';
+    agentTextInput.style.display = '';
+    agentTextInput.focus();
   } else {
     fileUploadLabel.style.display = 'none';
     agentTextInput.style.display = '';
@@ -371,37 +462,41 @@ function showQuestion(idx) {
 agentInputForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
 
-  // Syllabus upload (first question) — required
+  // Combined syllabus + class info (first question)
   if (currentQuestionIndex === 0) {
     const file = syllabusUpload.files && syllabusUpload.files[0];
-    if (!file) {
-      // Do not display an error to the user; simply focus the upload control.
-      syllabusUpload.focus();
+    const text = agentTextInput.value.trim();
+    if (!file && !text) {
+      // require either a file upload or class info
+      agentTextInput.focus();
       return;
     }
-    appendUserMessage(file.name);
-    // Clear the initial instruction now that a syllabus has been provided
-    if (agentStatus) agentStatus.textContent = '';
-    // attempt to upload if server endpoint exists; fall back to recording filename
-    let recordedName = file.name;
-    try {
-      const fd = new FormData();
-      fd.append('syllabus', file);
-      const res = await fetch('/api/upload-syllabus', { method: 'POST', body: fd });
-      if (res.ok) {
-        const data = await res.json().catch(() => ({}));
-        recordedName = data.filename || data.path || recordedName;
+    // record file name and/or text
+    let recordedName = file ? file.name : '';
+    if (file) {
+      appendUserMessage(file.name);
+      // attempt to upload if server endpoint exists; fall back to recording filename
+      try {
+        const fd = new FormData();
+        fd.append('syllabus', file);
+        const res = await fetch('/api/upload-syllabus', { method: 'POST', body: fd });
+        if (res.ok) {
+          const data = await res.json().catch(() => ({}));
+          recordedName = data.filename || data.path || recordedName;
+        }
+      } catch (err) {
+        console.log('Syllabus upload failed (silently):', err);
       }
-      // On non-ok responses, fail silently and keep recordedName as filename.
-    } catch (err) {
-      // Swallow network or other errors silently. Log for debugging only.
-      console.log('Syllabus upload failed (silently):', err);
     }
-
-    agentAnswers.push({ question: agentQuestions[0], answer: recordedName, fileName: file.name });
+    if (text) {
+      appendUserMessage(text);
+    }
+    const combinedAnswer = `${recordedName}${recordedName && text ? ' | ' : ''}${text}`;
+    agentAnswers.push({ question: agentQuestions[0], answer: combinedAnswer, fileName: file && file.name });
     currentQuestionIndex++;
     showQuestion(currentQuestionIndex);
     syllabusUpload.value = '';
+    agentTextInput.value = '';
     return;
   }
 
@@ -412,8 +507,8 @@ agentInputForm?.addEventListener('submit', async (e) => {
   agentAnswers.push({ question: agentQuestions[currentQuestionIndex], answer: text });
   agentTextInput.value = '';
 
-  // After answering the 'assignments' question (index 2), offer improvements
-  if (currentQuestionIndex === 2) {
+  // After answering the 'assignments' question (now index 1), offer improvements
+  if (currentQuestionIndex === 1) {
     const improvements = generateImprovements(text);
     appendAgentMessage('Here are 10 possible ways to improve that assignment:');
     const ul = document.createElement('ul');
@@ -458,12 +553,44 @@ agentPopulateExecuteBtn?.addEventListener('click', () => {
 });
 
 agentClearBtn?.addEventListener('click', () => {
-  startAgent();
-  agentOptions.innerHTML = '';
-  agentOptions.setAttribute('aria-hidden', 'true');
-  if (agentSatisfiedBtn) {
-    agentSatisfiedBtn.classList.remove('ready');
+  // Reset internal state
+  agentAnswers = [];
+  currentQuestionIndex = 0;
+
+  // Clear chat messages
+  if (agentMessages) agentMessages.innerHTML = '';
+
+  // Reset agent UI panels
+  if (agentOptions) {
+    agentOptions.innerHTML = '';
+    agentOptions.setAttribute('aria-hidden', 'true');
+    agentOptions.classList.remove('visible');
   }
+  if (agentSatisfiedBtn) agentSatisfiedBtn.classList.remove('ready');
+
+  // Reset syllabus widget and visibility: show the pre-chat widget and hide the chat pane
+  if (typeof syllabusWidget !== 'undefined' && syllabusWidget) syllabusWidget.style.display = '';
+  if (typeof agentChat !== 'undefined' && agentChat) agentChat.style.display = 'none';
+
+  // Reset file inputs and labels
+  if (typeof syllabusWidgetInput !== 'undefined' && syllabusWidgetInput) syllabusWidgetInput.value = '';
+  if (typeof syllabusUpload !== 'undefined' && syllabusUpload) syllabusUpload.value = '';
+  const swLabel = document.getElementById('syllabus-widget-label');
+  if (swLabel) swLabel.childNodes[0].textContent = 'Upload syllabus to start';
+
+  // Reset status and inputs
+  if (agentStatus) agentStatus.textContent = agentQuestions[0] || '';
+  if (agentTextInput) agentTextInput.value = '';
+
+  // Reset execute form and autofill selection
+  if (typeof executeForm !== 'undefined' && executeForm) executeForm.reset();
+  if (typeof clearExecuteAutofillSelection === 'function') clearExecuteAutofillSelection();
+  // ensure execute output panels are hidden and cleared
+  if (executeOutput) { executeOutput.innerHTML = ''; executeOutput.classList.remove('visible'); }
+  if (executeGradeOutput) { executeGradeOutput.innerHTML = ''; executeGradeOutput.classList.remove('visible'); }
+
+  // Ensure focus is back on the syllabus widget (if present)
+  if (syllabusWidgetInput) syllabusWidgetInput.focus();
 });
 
 agentSatisfiedBtn?.addEventListener('click', () => {
@@ -544,7 +671,6 @@ agentSatisfiedBtn?.addEventListener('click', () => {
   populateQuick.className = 'secondary';
   populateQuick.textContent = 'Populate Section 3 from answers';
   populateQuick.addEventListener('click', () => populateExecuteFromAnswers());
-  agentOptions.appendChild(populateQuick);
 
   // Provide personalized grant ideas based on collected answers
   const ideas = generateGrantIdeas();
@@ -636,16 +762,26 @@ agentSatisfiedBtn?.addEventListener('click', () => {
         fallback.forEach((it) => ideasArr.push(it));
       }
 
-      // render ideas as bot messages (clickable) with simplified text
-      ideasArr.forEach((it) => {
-        const simple = simplifyMessage(it);
-        const botIdea = document.createElement('div');
-        botIdea.className = 'agent-msg bot';
-        botIdea.textContent = `AI: ${simple}`;
-        botIdea.style.cursor = 'pointer';
-        botIdea.addEventListener('click', async () => {
-          const text = it;
-          ideasInput.value = text;
+      const summary = document.createElement('div');
+      summary.className = 'agent-msg bot';
+      const ideasHtml = ideasArr
+        .map((it, index) => `<li><button type="button" class="idea-link" data-idea-index="${index}">${escapeHtml(simplifyMessage(it))}</button></li>`)
+        .join('');
+      // build up to 4 option buttons (from API if available, otherwise default list)
+      const defaults = ['Option A: Scalable Classroom Tool', 'Option B: Pilot Study with Analytics', 'Option C: Curriculum-Integrated ePortfolio', 'Option D: Adaptive Feedback Pilot'];
+      const opts = Array.isArray(optionsArr) && optionsArr.length ? optionsArr.slice(0, 4) : defaults;
+      const optionsHtml = opts.map((label, i) => `<button type="button" class="secondary idea-option" data-option-index="${i}">${escapeHtml(label)}</button>`).join('');
+
+      summary.innerHTML = `
+        <strong>AI: Here is a compact summary of the ideas.</strong>
+        <ul class="idea-summary-list">${ideasHtml}</ul>
+        <div class="idea-summary-options">${optionsHtml}</div>
+      `;
+
+      summary.querySelectorAll(".idea-link").forEach((button) => {
+        button.addEventListener("click", async () => {
+          const index = Number(button.dataset.ideaIndex);
+          const text = ideasArr[index];
           const userMsg = document.createElement('div');
           userMsg.className = 'agent-msg user';
           userMsg.textContent = text;
@@ -659,25 +795,16 @@ agentSatisfiedBtn?.addEventListener('click', () => {
           ideasMessages.appendChild(bot);
           ideasChat.scrollTop = ideasChat.scrollHeight;
         });
-        ideasMessages.appendChild(botIdea);
       });
 
-      // render options if provided by API, otherwise fallback to defaults
-      const opts = optionsArr && optionsArr.length ? optionsArr : ['Option A: Scalable Classroom Tool', 'Option B: Pilot Study with Analytics', 'Option C: Curriculum-Integrated ePortfolio'];
-      const botOptions = document.createElement('div');
-      botOptions.className = 'agent-msg bot';
-      botOptions.style.display = 'flex';
-      botOptions.style.gap = '8px';
-      botOptions.style.flexWrap = 'wrap';
-      opts.forEach((label, i) => {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'secondary';
-        b.textContent = label;
-        b.addEventListener('click', () => selectProposalOption(i));
-        botOptions.appendChild(b);
+      summary.querySelectorAll('.idea-option').forEach((button) => {
+        button.addEventListener('click', (e) => {
+          const idx = Number(button.dataset.optionIndex);
+          selectProposalOption(idx);
+        });
       });
-      ideasMessages.appendChild(botOptions);
+
+      ideasMessages.appendChild(summary);
 
     } catch (err) {
       loading.remove();
@@ -685,18 +812,33 @@ agentSatisfiedBtn?.addEventListener('click', () => {
       errMsg.className = 'agent-msg bot';
       errMsg.textContent = 'AI: Showing offline suggestions.';
       ideasMessages.appendChild(errMsg);
-      // fallback render static ideas and options
+      // fallback render static ideas and options in a single summary message
       const fallback = generateGrantIdeas();
-      fallback.forEach((it) => {
-        const botIdea = document.createElement('div');
-        botIdea.className = 'agent-msg bot';
-        botIdea.textContent = it;
-        ideasMessages.appendChild(botIdea);
+      const fallbackSummary = document.createElement('div');
+      fallbackSummary.className = 'agent-msg bot';
+      fallbackSummary.innerHTML = `
+        <strong>AI: Offline summary of ideas.</strong>
+        <ul class="idea-summary-list">${fallback.map((it, index) => `<li><button type="button" class="idea-link" data-idea-index="${index}">${escapeHtml(simplifyMessage(it))}</button></li>`).join('')}</ul>
+      `;
+      fallbackSummary.querySelectorAll(".idea-link").forEach((button) => {
+        button.addEventListener("click", async () => {
+          const index = Number(button.dataset.ideaIndex);
+          const text = fallback[index];
+          const userMsg = document.createElement('div');
+          userMsg.className = 'agent-msg user';
+          userMsg.textContent = text;
+          ideasMessages.appendChild(userMsg);
+          ideasChat.scrollTop = ideasChat.scrollHeight;
+
+          const rawReply = await aiFetchReply({ type: 'explain', idea: text, answers: agentAnswers });
+          const bot = document.createElement('div');
+          bot.className = 'agent-msg bot';
+          bot.textContent = rawReply;
+          ideasMessages.appendChild(bot);
+          ideasChat.scrollTop = ideasChat.scrollHeight;
+        });
       });
-      const botOptions = document.createElement('div');
-      botOptions.className = 'agent-msg bot';
-      botOptions.innerHTML = '<button class="secondary">Option A: Scalable Classroom Tool</button><button class="secondary">Option B: Pilot Study with Analytics</button><button class="secondary">Option C: Curriculum-Integrated ePortfolio</button>';
-      ideasMessages.appendChild(botOptions);
+      ideasMessages.appendChild(fallbackSummary);
     }
     ideasChat.scrollTop = ideasChat.scrollHeight;
   }
@@ -726,6 +868,7 @@ agentSatisfiedBtn?.addEventListener('click', () => {
   });
 
   agentOptions.appendChild(ideasChat);
+  agentOptions.appendChild(populateQuick);
 });
 
 function selectProposalOption(index) {

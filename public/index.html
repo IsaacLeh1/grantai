@@ -62,16 +62,18 @@
 
       <section id="explore" class="phase" aria-labelledby="Explore phase">
         <h2>Grant Idea Generator</h2>
-        <p>Answer simple questions one at a time. The AI agent will guide you and collect what we need.</p>
+        <p>An AI agent will assist in gathering needed information to generate grant ideas tailored to your subject.</p>
 
         <div id="agent-area" class="panel-form">
+          <div id="syllabus-widget" class="syllabus-widget">
+            <label id="syllabus-widget-label">Upload course syllabus to start
+              <input id="syllabus-upload-widget" type="file" name="syllabusWidget" accept=".pdf,.doc,.docx" />
+            </label>
+          </div>
           <div id="agent-chat" class="agent-chat" aria-live="polite">
             <div id="agent-messages" class="agent-messages"></div>
-            <div id="agent-status" class="agent-status" aria-live="polite">To begin, a syllabus is required.</div>
-
             <form id="agent-input-form" class="agent-composer" autocomplete="off">
               <label id="file-upload-label" class="agent-file-upload">
-                Upload syllabus
                 <input id="syllabus-upload" type="file" name="syllabus" accept=".pdf,.doc,.docx" />
               </label>
 
@@ -95,32 +97,32 @@
 
         <form id="execute-form" class="panel-form">
           <label>
-            Box 1: The course the faculty works with
+            The course the faculty works with
             <input type="text" name="box1" required />
           </label>
 
           <label>
-            Box 2: The assignment/assessment to be affected
+            The assignment/assessment to be affected
             <textarea name="box2" rows="2" required></textarea>
           </label>
 
           <label>
-            Box 3: What you want to build (connects to rubric)
+            What you want to build (connects to rubric)
             <textarea name="box3" rows="3" required></textarea>
           </label>
 
           <label>
-            Box 4: How your idea improves learning (connects to rubric)
+            How your idea improves learning (connects to rubric)
             <textarea name="box4" rows="3" required></textarea>
           </label>
 
           <label>
-            Box 5: How much money is needed (up to $5,000)
+            How much money is needed (up to $5,000)
             <input type="text" name="box5" required />
           </label>
 
           <label>
-            Box 6: Software needed
+            What software do you need in order to accomplish this? (DX approval needed, but we can help with that).
             <textarea name="box6" rows="2" required></textarea>
           </label>
 

@@ -2,8 +2,11 @@
   --ink: #0f2218;
   --ink-soft: #2c4a3b;
   --paper: #eef5ef;
+  --brand: #124c35;
   --brand-soft: #1f6b4a;
   --accent: #2d8b57;
+  --section-bg-odd: #fafafa;
+  --section-bg-even: #efefef;
   --danger: #9b2226;
   --line: rgba(15, 34, 24, 0.16);
   --shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
@@ -19,6 +22,7 @@ body {
   padding: 0;
   background: var(--paper);
   color: var(--ink);
+  font-size: 18px;
   font-family: "Space Grotesk", sans-serif;
   min-height: 100%;
   height: 100%;
@@ -62,10 +66,11 @@ h3 {
   position: fixed;
   top: 0;
   right: 0;
-  width: min(48%, 480px);
-  max-width: 480px;
+  width: min(48%, 450px);
+  max-width: 450px;
   background: #fff;
   padding: 0.8rem 1rem;
+  border-bottom: 10px solid #d0d0d0;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   z-index: 60;
   justify-content: space-between;
@@ -77,6 +82,21 @@ h3 {
   transform: translateY(-120%);
   opacity: 0;
   pointer-events: none;
+}
+
+/* Prevent nav items and title from wrapping onto multiple lines */
+.nav-wrap {
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.nav-wrap .main-nav {
+  flex-wrap: nowrap;
+}
+
+.nav-wrap .main-nav a,
+.site-title {
+  white-space: nowrap;
 }
 
 .brand {
@@ -216,7 +236,13 @@ h3 {
 
 
 /* Small styles for the agent chat */
-.agent-chat { max-height: 420px; overflow:auto; padding:12px; border:1px solid #e5e7eb; background:#fff; margin-bottom:8px; display:flex; flex-direction:column; gap:10px; }
+.agent-chat { max-height: 420px; overflow:auto; padding:12px; border:1px solid #e5e7eb; background:#fff; margin-bottom:8px; display:flex; flex-direction:column; gap:10px; max-width:520px; width:100%; }
+.syllabus-widget { padding: 12px; border: 1px dashed rgba(15,34,24,0.08); background: rgba(255,255,255,0.95); margin-bottom: 8px; }
+
+/* Hide the agent chat until a syllabus is provided */
+#agent-chat {
+  display: none;
+}
 .agent-messages { display:flex; flex-direction:column; gap:10px; }
 .agent-msg { padding:8px 10px; margin:6px 0; border-radius:6px; }
 .agent-msg.bot { background:#f1f5f9; color:#0f172a; }
@@ -224,8 +250,24 @@ h3 {
 .agent-composer { margin-top:auto; display:flex; gap:8px; align-items:center; padding:10px; border-top:1px solid #e5e7eb; background:linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.95)); border-radius:14px; position:sticky; bottom:0; }
 .agent-file-upload { display:flex; flex-direction:column; gap:4px; font-size:0.85rem; color:var(--ink-soft); }
 .agent-composer input[type="text"] { flex:1; padding:10px 12px; border-radius:999px; border:1px solid var(--line); font:inherit; }
-.agent-send { width:42px; height:42px; border:none; border-radius:999px; background:var(--brand); color:#fff; font-size:1.3rem; line-height:1; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; box-shadow:0 6px 16px rgba(18,76,53,0.18); }
-.agent-send:hover { background:var(--brand-soft); }
+.agent-send {
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(120deg, var(--accent) 0%, var(--brand-soft) 100%) !important;
+  color: #fff !important;
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 16px rgba(18,76,53,0.18);
+}
+.agent-send:hover {
+  filter: brightness(0.95);
+}
 .agent-actions { margin-top:0.6rem; }
 .agent-status { color: var(--ink-soft); font-size: 0.95rem; margin-bottom: 6px; min-height: 1.2rem; }
 .agent-actions #agent-satisfied.ready {
@@ -251,6 +293,51 @@ h3 {
   border-collapse: collapse;
   table-layout: fixed;
   margin: 0.6rem 0 1rem 0;
+}
+
+/* Styles for idea summary buttons in the second chat (stacked vertically) */
+.idea-summary-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.idea-summary-list li { margin: 0; }
+.idea-link {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #fff;
+  cursor: pointer;
+  font-weight: 600;
+}
+.idea-link:hover {
+  background: linear-gradient(120deg, rgba(45,139,87,0.06), rgba(18,76,53,0.02));
+}
+
+/* Horizontal options row */
+.idea-summary-options {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.6rem;
+  flex-wrap: wrap;
+}
+.idea-option {
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #fff;
+  cursor: pointer;
+  font-weight: 600;
+}
+.idea-option:hover {
+  background: linear-gradient(120deg, rgba(45,139,87,0.06), rgba(18,76,53,0.02));
 }
 .agent-summary-table th,
 .agent-summary-table td {
@@ -310,13 +397,18 @@ h3 {
 .phase {
   display: block;
   width: 100%;
-  background: var(--panel);
+  background: var(--section-bg-odd);
   border: 1px solid var(--line);
   border-radius: 0;
   padding: 1.2rem;
   box-shadow: none;
   animation: rise-in 330ms ease;
   scroll-margin-top: 1rem;
+  transition: background 180ms ease;
+}
+
+.phase:nth-of-type(even) {
+  background: var(--section-bg-even);
 }
 
 #review.phase {
@@ -364,9 +456,9 @@ h3 {
 .rubric-item summary {
   list-style: none;
   cursor: pointer;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
   gap: 0.5rem;
   padding: 0.8rem 0.9rem;
   font-weight: 600;
@@ -381,6 +473,8 @@ h3 {
   content: "+";
   font-size: 1rem;
   color: var(--brand);
+  flex-shrink: 0;
+  justify-self: end;
 }
 
 .rubric-item[open] summary::after {
@@ -389,6 +483,13 @@ h3 {
 
 .rubric-title {
   font-family: "Merriweather", serif;
+  min-width: 0;
+}
+
+.rubric-item[open] .rubric-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .rubric-body {
@@ -402,7 +503,19 @@ h3 {
 }
 
 .rubric-item[open] summary {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
   border-right: 1px solid var(--line);
+}
+
+.rubric-item[open] .weight-badge {
+  margin-left: auto;
+}
+
+.rubric-item[open] summary::after {
+  margin-left: 0;
 }
 
 .rubric-item[open] .rubric-body {
@@ -422,7 +535,12 @@ h3 {
 }
 
 .weight-badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
+  flex: 0 0 4.5ch;
+  min-width: 4.5ch;
   margin: 0;
   padding: 0.2rem 0.55rem;
   border-radius: 999px;
@@ -430,6 +548,7 @@ h3 {
   color: var(--brand);
   font-size: 0.82rem;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .level-list li {
@@ -855,7 +974,6 @@ dialog::backdrop {
 
   .logo-placeholder {
     margin-left: -12px;
-  }
   }
 
   .hero-title h1 {
