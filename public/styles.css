@@ -109,11 +109,24 @@ h3 {
   align-items: center;
   justify-content: center;
   padding: 2.2rem 1rem;
-  background: linear-gradient(180deg, rgba(18,76,53,0.06), rgba(255,255,255,0));
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
   border-radius: 14px;
+  min-height: 320px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(9, 24, 17, 0.18), rgba(9, 24, 17, 0.34));
 }
 
 .hero-inner {
+  position: relative;
   max-width: 980px;
   text-align: left;
 }
@@ -123,7 +136,7 @@ h3 {
   margin: 0 0 0.4rem 0;
   line-height: 1.02;
   font-weight: 800;
-  color: var(--brand);
+  color: #f7fbf8;
 }
 
 .hero-ctas {
@@ -133,7 +146,7 @@ h3 {
 }
 
 .lead {
-  color: var(--ink-soft);
+  color: rgba(247, 251, 248, 0.9);
   font-size: 1rem;
   margin-top: 0.25rem;
 }
@@ -148,7 +161,6 @@ h3 {
 
 .lead {
   max-width: 720px;
-  color: var(--ink-soft);
 }
 
 
@@ -419,6 +431,20 @@ select {
   background: #fff;
   padding: 0.55rem 0.85rem;
   cursor: pointer;
+}
+
+.hero .secondary {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.hero .secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.hero .cta {
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .autofill-variant.selected {
