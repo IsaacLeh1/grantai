@@ -92,7 +92,7 @@ h3 {
   padding: 0.8rem 1rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   z-index: 60;
-  justify-content: flex-start;
+  justify-content: space-between;
 }
 
 .brand {
@@ -122,6 +122,14 @@ h3 {
 .content-column .main-nav {
   justify-content: flex-end;
   margin-bottom: 0.5rem;
+}
+
+/* Ensure header nav aligns right inside the nav-wrap */
+.nav-wrap .main-nav {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .main-nav a {
