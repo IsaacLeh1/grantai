@@ -17,9 +17,7 @@ html,
 body {
   margin: 0;
   padding: 0;
-  background: radial-gradient(circle at 20% 20%, #b9d9c1 0%, transparent 45%),
-    radial-gradient(circle at 85% 10%, #8bb899 0%, transparent 38%),
-    var(--paper);
+  background: var(--paper);
   color: var(--ink);
   font-family: "Space Grotesk", sans-serif;
   min-height: 100%;
@@ -40,27 +38,7 @@ h3 {
 }
 
 .bg-shape {
-  position: fixed;
-  border-radius: 999px;
-  pointer-events: none;
-  z-index: -1;
-  filter: blur(8px);
-}
-
-.bg-one {
-  width: 330px;
-  height: 330px;
-  right: -100px;
-  top: 90px;
-  background: rgba(10, 147, 150, 0.2);
-}
-
-.bg-two {
-  width: 280px;
-  height: 280px;
-  left: -80px;
-  bottom: 80px;
-  background: rgba(238, 155, 0, 0.2);
+  display: none;
 }
 
 .site-header {
@@ -81,7 +59,7 @@ h3 {
 
 /* Move top header to the right and give it a white background */
 .nav-wrap {
-  position: absolute;
+  position: fixed;
   top: 0;
   right: 0;
   width: min(48%, 480px);
@@ -91,6 +69,14 @@ h3 {
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   z-index: 60;
   justify-content: space-between;
+  transition: transform 180ms ease, opacity 180ms ease;
+  will-change: transform, opacity;
+}
+
+.nav-wrap.is-hidden {
+  transform: translateY(-120%);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .brand {
