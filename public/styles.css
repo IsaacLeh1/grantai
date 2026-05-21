@@ -103,7 +103,7 @@ h3 {
 }
 
 .logo-img {
-  width: 260px;
+  width: 500px;
   height: auto;
   display: block;
 }
@@ -171,7 +171,11 @@ h3 {
   position: relative;
   width: min(980px, 100%);
   max-width: 980px;
-  text-align: left;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .hero-inner h1 {
