@@ -58,40 +58,84 @@ h3 {
   background: rgba(238, 155, 0, 0.2);
 }
 
-.hero {
+.site-header {
   max-width: 1600px;
-  margin: 2rem auto 1rem;
-  padding: 0 1rem;
-  animation: rise-in 500ms ease;
+  margin: 0 auto;
+  padding: 1rem;
 }
 
-.hero-head {
+.nav-wrap {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.4rem 0.6rem;
 }
 
-.logo-placeholder {
+.brand {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 0.6rem;
+  text-decoration: none;
 }
-.logo-placeholder {
-  margin-left: -36px;
-}
+
 .logo-img {
-  width: 320px;
+  width: 220px;
   height: auto;
   display: block;
 }
 
-.hero-title h1 {
+.main-nav {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.main-nav a {
+  color: var(--ink);
+  text-decoration: none;
+  padding: 0.5rem 0.8rem;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.main-nav a:hover {
+  background: rgba(18,76,53,0.06);
+}
+
+.hero {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.2rem 1rem;
+  background: linear-gradient(180deg, rgba(18,76,53,0.06), rgba(255,255,255,0));
+  border-radius: 14px;
+}
+
+.hero-inner {
+  max-width: 980px;
+  text-align: left;
+}
+
+.hero-inner h1 {
   font-size: 2.6rem;
-  margin: 0;
+  margin: 0 0 0.4rem 0;
   line-height: 1.02;
   font-weight: 800;
   color: var(--brand);
-  white-space: nowrap;
+}
+
+.hero-ctas {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.6rem;
+}
+
+.lead {
+  color: var(--ink-soft);
+  font-size: 1rem;
+  margin-top: 0.25rem;
 }
 
 .eyebrow {
