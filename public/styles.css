@@ -267,6 +267,51 @@ h3 {
   flex: 1 0 auto;
 }
 
+/* Two-column split: left visual, right content column */
+.layout-split {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+}
+
+.side-visual {
+  flex: 1 1 auto;
+  background: transparent;
+}
+
+.content-column {
+  width: 480px;
+  max-width: 48%;
+  background: #fff;
+  padding: 2rem;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Make phases inside the content column visually neutral (white cards) */
+.content-column .phase {
+  background: #fff;
+  border: none;
+  padding: 1.25rem 0;
+}
+
+/* Ensure outputs and cards look good inside content column */
+.content-column .output-panel,
+.content-column .card,
+.content-column .rubric-item {
+  background: #fff;
+  border: none;
+  border-radius: 0;
+  padding: 0.8rem 0;
+}
+
+@media (max-width: 900px) {
+  .layout-split { flex-direction: column; }
+  .content-column { width: 100%; max-width: 100%; padding: 1rem; }
+}
+
 .phase {
   display: block;
   width: 100%;
