@@ -2,8 +2,6 @@
   --ink: #0f2218;
   --ink-soft: #2c4a3b;
   --paper: #eef5ef;
-  --panel: rgba(255, 255, 255, 0.76);
-  --brand: #124c35;
   --brand-soft: #1f6b4a;
   --accent: #2d8b57;
   --danger: #9b2226;
@@ -102,6 +100,25 @@ h3 {
   text-decoration: none;
 }
 
+.site-title {
+  font-family: "Merriweather", serif;
+  font-weight: 700;
+  color: var(--brand);
+  font-size: 1rem;
+  line-height: 1;
+  margin-left: 0.25rem;
+  display: inline-block;
+}
+
+.brand .site-title {
+  font-family: "Merriweather", serif;
+  font-weight: 700;
+  color: var(--brand);
+  font-size: 1rem;
+  line-height: 1;
+}
+
+
 .logo-img {
   width: 500px;
   height: auto;
@@ -148,14 +165,14 @@ h3 {
   width: 100%;
   margin-top: 0.5rem;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: center; /* vertical centering */
+  justify-content: flex-start; /* left-align content horizontally */
   padding: 0 1rem;
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
   border-radius: 0;
-  min-height: 420px;
+  min-height: 560px;
   position: relative;
   overflow: hidden;
 }
@@ -171,12 +188,14 @@ h3 {
   position: relative;
   width: min(980px, 100%);
   max-width: 980px;
-  text-align: center;
+  text-align: left;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: center; /* vertical centering */
   min-height: 100%;
+  padding: 0 2rem 0 3rem; /* more space from the left image border */
+  transform: translateY(40%); /* nudge down */
 }
 
 .hero-inner h1 {
@@ -188,9 +207,7 @@ h3 {
 }
 
 .hero-ctas {
-  margin-top: 1rem;
-  display: flex;
-  gap: 0.6rem;
+  display: none !important;
 }
 
 .lead {
