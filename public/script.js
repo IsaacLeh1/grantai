@@ -615,9 +615,8 @@ agentSatisfiedBtn?.addEventListener('click', () => {
   if (agentSatisfiedBtn) {
     agentSatisfiedBtn.classList.remove('ready');
   }
-  // Clear the agent chat area so Agent 2 can present the summary cleanly
+  // Keep the agent chat history; append follow-up prompts for Agent 2
   if (agentMessages) {
-    agentMessages.innerHTML = '';
     // Ask for desired changes/additions in the agent chat
     appendAgentMessage('Any desired changes or additions?');
     // Also echo the generated ideas into the agent chat so the user sees them in context
