@@ -329,6 +329,11 @@ h3 {
 .idea-link:hover {
   background: linear-gradient(120deg, rgba(45,139,87,0.06), rgba(18,76,53,0.02));
 }
+.idea-link.selected {
+  background: rgba(18, 76, 53, 0.12);
+  border-color: rgba(18, 76, 53, 0.35);
+  box-shadow: inset 0 0 0 1px rgba(18, 76, 53, 0.12);
+}
 
 /* Horizontal options row */
 .idea-summary-options {
@@ -348,6 +353,11 @@ h3 {
 }
 .idea-option:hover {
   background: linear-gradient(120deg, rgba(45,139,87,0.06), rgba(18,76,53,0.02));
+}
+.idea-option.selected {
+  background: rgba(18, 76, 53, 0.12);
+  border-color: rgba(18, 76, 53, 0.35);
+  box-shadow: inset 0 0 0 1px rgba(18, 76, 53, 0.12);
 }
 .agent-summary-table th,
 .agent-summary-table td {

@@ -849,9 +849,11 @@ agentSatisfiedBtn?.addEventListener('click', () => {
 
       summary.querySelectorAll(".idea-link").forEach((button) => {
         button.addEventListener("click", async () => {
+          summary.querySelectorAll('.idea-link').forEach((item) => item.classList.remove('selected'));
+          button.classList.add('selected');
+
           const index = Number(button.dataset.ideaIndex);
           const text = ideasArr[index];
-          appendIdeasUserMessage(text);
 
           const rawReply = await aiFetchReply({ type: 'explain', idea: text, answers: agentAnswers });
           const bot = document.createElement('div');
@@ -864,6 +866,9 @@ agentSatisfiedBtn?.addEventListener('click', () => {
 
       summary.querySelectorAll('.idea-option').forEach((button) => {
         button.addEventListener('click', (e) => {
+          summary.querySelectorAll('.idea-option').forEach((item) => item.classList.remove('selected'));
+          button.classList.add('selected');
+
           const idx = Number(button.dataset.optionIndex);
           selectProposalOption(idx);
         });
@@ -887,9 +892,11 @@ agentSatisfiedBtn?.addEventListener('click', () => {
       `;
       fallbackSummary.querySelectorAll(".idea-link").forEach((button) => {
         button.addEventListener("click", async () => {
+          fallbackSummary.querySelectorAll('.idea-link').forEach((item) => item.classList.remove('selected'));
+          button.classList.add('selected');
+
           const index = Number(button.dataset.ideaIndex);
           const text = fallback[index];
-          appendIdeasUserMessage(text);
 
           const rawReply = await aiFetchReply({ type: 'explain', idea: text, answers: agentAnswers });
           const bot = document.createElement('div');
