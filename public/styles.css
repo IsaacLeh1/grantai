@@ -205,7 +205,7 @@ h3 {
 }
 
 .hero-inner h1 {
-  font-size: 2.6rem;
+  font-size: clamp(1.6rem, 2.2vw + 1rem, 2rem);
   margin: 0 0 0.4rem 0;
   line-height: 1.02;
   font-weight: 800;
@@ -247,6 +247,16 @@ h3 {
 .agent-msg { padding:8px 10px; margin:6px 0; border-radius:6px; }
 .agent-msg.bot { background:#f1f5f9; color:#0f172a; }
 .agent-msg.user { background:#dbeafe; color:#0b1220; text-align:right; }
+.agent-msg.bot { display: flex; align-items: center; gap: 0.6rem; }
+.agent-reply.user {
+  display: inline-block;
+  margin-left: 0.6rem;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: #dbeafe;
+  color: #0b1220;
+  font-weight: 600;
+}
 .agent-composer { margin-top:auto; display:flex; gap:8px; align-items:center; padding:10px; border-top:1px solid #e5e7eb; background:linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.95)); border-radius:14px; position:sticky; bottom:0; }
 .agent-file-upload { display:flex; flex-direction:column; gap:4px; font-size:0.85rem; color:var(--ink-soft); }
 .agent-composer input[type="text"] { flex:1; padding:10px 12px; border-radius:999px; border:1px solid var(--line); font:inherit; }

@@ -422,12 +422,29 @@ if (syllabusUpload) {
 function appendAgentMessage(text) {
   const div = document.createElement('div');
   div.className = 'agent-msg bot';
-  div.textContent = text;
+  // Create bot message container. Keep content as HTML if markdown is available.
+  div.innerHTML = text;
   agentMessages.appendChild(div);
   agentChat.scrollTop = agentChat.scrollHeight;
 }
 
 function appendUserMessage(text) {
+  // If last message is a bot message in the agent chat, append the user's
+  // reply inline inside that bot message so they appear on the same line.
+  try {
+    const last = agentMessages.lastElementChild;
+    if (last && last.classList && last.classList.contains('bot')) {
+      const span = document.createElement('span');
+      span.className = 'agent-reply user';
+      span.textContent = text;
+      last.appendChild(span);
+      agentChat.scrollTop = agentChat.scrollHeight;
+      return;
+    }
+  } catch (e) {
+    // fall through to append as separate message
+  }
+
   const div = document.createElement('div');
   div.className = 'agent-msg user';
   div.textContent = text;
