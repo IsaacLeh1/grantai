@@ -780,6 +780,24 @@ agentSatisfiedBtn?.addEventListener('click', () => {
     }
   }
 
+  function appendIdeasUserMessage(text) {
+    const last = ideasMessages.lastElementChild;
+    if (last && last.classList && last.classList.contains('bot')) {
+      const span = document.createElement('span');
+      span.className = 'agent-reply user';
+      span.textContent = text;
+      last.appendChild(span);
+      ideasChat.scrollTop = ideasChat.scrollHeight;
+      return;
+    }
+
+    const div = document.createElement('div');
+    div.className = 'agent-msg user';
+    div.textContent = text;
+    ideasMessages.appendChild(div);
+    ideasChat.scrollTop = ideasChat.scrollHeight;
+  }
+
   const ideasComposer = document.createElement('form');
   ideasComposer.className = 'agent-composer';
   const ideasInput = document.createElement('input');
@@ -841,11 +859,7 @@ agentSatisfiedBtn?.addEventListener('click', () => {
         button.addEventListener("click", async () => {
           const index = Number(button.dataset.ideaIndex);
           const text = ideasArr[index];
-          const userMsg = document.createElement('div');
-          userMsg.className = 'agent-msg user';
-          userMsg.textContent = text;
-          ideasMessages.appendChild(userMsg);
-          ideasChat.scrollTop = ideasChat.scrollHeight;
+          appendIdeasUserMessage(text);
 
           const rawReply = await aiFetchReply({ type: 'explain', idea: text, answers: agentAnswers });
           const bot = document.createElement('div');
@@ -883,11 +897,7 @@ agentSatisfiedBtn?.addEventListener('click', () => {
         button.addEventListener("click", async () => {
           const index = Number(button.dataset.ideaIndex);
           const text = fallback[index];
-          const userMsg = document.createElement('div');
-          userMsg.className = 'agent-msg user';
-          userMsg.textContent = text;
-          ideasMessages.appendChild(userMsg);
-          ideasChat.scrollTop = ideasChat.scrollHeight;
+          appendIdeasUserMessage(text);
 
           const rawReply = await aiFetchReply({ type: 'explain', idea: text, answers: agentAnswers });
           const bot = document.createElement('div');
@@ -910,12 +920,8 @@ agentSatisfiedBtn?.addEventListener('click', () => {
     e.preventDefault();
     const val = ideasInput.value.trim();
     if (!val) return;
-    const userMsg = document.createElement('div');
-    userMsg.className = 'agent-msg user';
-    userMsg.textContent = val;
-    ideasMessages.appendChild(userMsg);
+    appendIdeasUserMessage(val);
     ideasInput.value = '';
-    ideasChat.scrollTop = ideasChat.scrollHeight;
     // simulated AI reply
     setTimeout(() => {
       const bot = document.createElement('div');
