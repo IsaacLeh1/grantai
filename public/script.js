@@ -482,20 +482,25 @@ agentInputForm?.addEventListener('submit', async (e) => {
 
   // If we're waiting for the user to pick an improvement or say 'no', handle that first
   if (awaitingImprovementsFollowup) {
-    const reply = agentTextInput.value.trim().toLowerCase();
-    agentTextInput.value = '';
-    // clear the awaiting flag
-    awaitingImprovementsFollowup = false;
-    if (!reply) {
+    const rawReply = agentTextInput.value.trim();
+    if (!rawReply) {
       agentTextInput.focus();
       return;
     }
+    // display the user's reply inline with the last bot message
+    appendUserMessage(rawReply);
+    agentTextInput.value = '';
+    // clear the awaiting flag (unless we re-enter later)
+    awaitingImprovementsFollowup = false;
+
+    const reply = rawReply.toLowerCase();
     if (reply === 'no') {
       appendAgentMessage('Okay — moving on to the next question.');
       currentQuestionIndex++;
       showQuestion(currentQuestionIndex);
       return;
     }
+
     // If user provided a number (or comma-separated numbers), show details for each
     const picks = reply.split(/[,\s]+/).map((s) => Number(s)).filter((n) => Number.isFinite(n) && n >= 1);
     if (picks.length) {
@@ -510,6 +515,7 @@ agentInputForm?.addEventListener('submit', async (e) => {
       awaitingImprovementsFollowup = true;
       return;
     }
+
     // fallback: advance if nothing matched
     currentQuestionIndex++;
     showQuestion(currentQuestionIndex);
