@@ -350,6 +350,7 @@ const agentQuestions = [
 
 let agentAnswers = [];
 let currentQuestionIndex = 0;
+let awaitingImprovementsFollowup = false;
 
 // Syllabus-only widget (visible before chat)
 const syllabusWidget = document.getElementById('syllabus-widget');
@@ -479,6 +480,42 @@ function showQuestion(idx) {
 agentInputForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
 
+  // If we're waiting for the user to pick an improvement or say 'no', handle that first
+  if (awaitingImprovementsFollowup) {
+    const reply = agentTextInput.value.trim().toLowerCase();
+    agentTextInput.value = '';
+    // clear the awaiting flag
+    awaitingImprovementsFollowup = false;
+    if (!reply) {
+      agentTextInput.focus();
+      return;
+    }
+    if (reply === 'no') {
+      appendAgentMessage('Okay — moving on to the next question.');
+      currentQuestionIndex++;
+      showQuestion(currentQuestionIndex);
+      return;
+    }
+    // If user provided a number (or comma-separated numbers), show details for each
+    const picks = reply.split(/[,\s]+/).map((s) => Number(s)).filter((n) => Number.isFinite(n) && n >= 1);
+    if (picks.length) {
+      picks.slice(0, 4).forEach((p) => {
+        const idx = Math.max(0, p - 1);
+        const improvements = generateImprovements('');
+        const detail = improvements[idx] || `No detail available for option ${p}.`;
+        appendAgentMessage(`Detail for option ${p}: ${detail}`);
+      });
+      appendAgentMessage('Would you like more details on another option, or shall we continue? (say a number or "no")');
+      // stay in this follow-up state to allow multiple picks
+      awaitingImprovementsFollowup = true;
+      return;
+    }
+    // fallback: advance if nothing matched
+    currentQuestionIndex++;
+    showQuestion(currentQuestionIndex);
+    return;
+  }
+
   // Combined syllabus + class info (first question)
   if (currentQuestionIndex === 0) {
     const file = syllabusUpload.files && syllabusUpload.files[0];
@@ -537,8 +574,8 @@ agentInputForm?.addEventListener('submit', async (e) => {
     agentMessages.appendChild(ul);
     appendAgentMessage('Would you like to learn more about any of these? If so, name the number or say "no".');
     agentChat.scrollTop = agentChat.scrollHeight;
-    currentQuestionIndex++;
-    showQuestion(currentQuestionIndex);
+    // Instead of auto-advancing, wait for the user's follow-up (number or 'no')
+    awaitingImprovementsFollowup = true;
     return;
   }
 
