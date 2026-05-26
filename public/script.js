@@ -658,14 +658,6 @@ agentSatisfiedBtn?.addEventListener('click', () => {
   if (agentSatisfiedBtn) {
     agentSatisfiedBtn.classList.remove('ready');
   }
-  // Keep the agent chat history; append follow-up prompts for Agent 2
-  if (agentMessages) {
-    // Ask for desired changes/additions in the agent chat
-    appendAgentMessage('Any desired changes or additions?');
-    // Also echo the generated ideas into the agent chat so the user sees them in context
-    const ideasForChat = generateGrantIdeas();
-    ideasForChat.forEach((idea) => appendAgentMessage(idea));
-  }
   // Agent 2: summarize and offer 3 proposal options
   let summary = agentAnswers.map(a => `- ${a.question} → ${a.answer}`).join('\n');
   // If no answers collected (or during offline/demo), provide an example summary
