@@ -549,11 +549,19 @@ async function callOpenAIRemote(systemPrompt, userPrompt, maxOutputTokens = 800)
   return data.output_text || "";
 }
 
-// Calls a local LLM (Ollama by default) via the OpenAI-compatible /chat/completions endpoint.
+// Calls an OpenAI-compatible /chat/completions endpoint. Defaults to a local
+// Ollama server, but with LOCAL_LLM_API_KEY set it also works with hosted
+// providers like Groq or OpenRouter (needed when the site runs in the cloud).
 async function callLocalLLM(systemPrompt, userPrompt, maxOutputTokens = 800) {
   const baseUrl = (process.env.LOCAL_LLM_BASE_URL || "http://localhost:11434/v1").replace(/\/+$/, "");
   const model = process.env.LOCAL_LLM_MODEL || "llama3";
   const timeoutMs = Number(process.env.LOCAL_LLM_TIMEOUT_MS || 120000);
+  const apiKey = safe(process.env.LOCAL_LLM_API_KEY);
+
+  const headers = { "Content-Type": "application/json" };
+  if (apiKey) {
+    headers.Authorization = `Bearer ${apiKey}`;
+  }
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -562,7 +570,7 @@ async function callLocalLLM(systemPrompt, userPrompt, maxOutputTokens = 800) {
   try {
     response = await fetch(`${baseUrl}/chat/completions`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({
         model,
         temperature: 0.4,
