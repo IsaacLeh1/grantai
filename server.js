@@ -874,6 +874,18 @@ app.post("/api/reviews", async (req, res) => {
   }
 });
 
+// Strip a leading due-date/time prefix like "Wed, Feb 18, 11:30 PM MT:" so the
+// assignment name reads cleanly (e.g. "Week 6 Assignment: Matching").
+function cleanAssignmentName(raw) {
+  return String(raw || "")
+    .trim()
+    .replace(
+      /^[A-Za-z]{3,9},?\s+[A-Za-z]{3,9}\s+\d{1,2},?\s+\d{1,2}:\d{2}\s*(?:AM|PM)?\s*[A-Z]{0,3}\s*[:\-–]\s*/i,
+      ""
+    )
+    .trim();
+}
+
 // Coerce whatever JSON shape the model returned into a clean assignment list.
 // Handles: {assignments:[...]}, alternate keys, top-level arrays, and arrays of
 // plain strings (which local models commonly emit instead of objects).
@@ -890,12 +902,12 @@ function normalizeAssignments(parsed) {
   return list
     .map((a) => {
       if (typeof a === "string") {
-        return { name: a.trim(), description: "" };
+        return { name: cleanAssignmentName(a), description: "" };
       }
       if (a && typeof a === "object") {
         const name = a.name || a.title || a.assignment || a.assessment || a.task || "";
         const description = a.description || a.details || a.detail || a.notes || a.due || "";
-        return { name: String(name).trim(), description: String(description || "").trim() };
+        return { name: cleanAssignmentName(name), description: String(description || "").trim() };
       }
       return null;
     })
@@ -920,7 +932,7 @@ function heuristicAssignments(text) {
   for (const line of lines) {
     if (line.length < 4 || line.length > 160) continue;
     if (keywordRe.test(line)) {
-      const name = line.replace(/^[-*•\d.)(\s]+/, "").trim().slice(0, 140);
+      const name = cleanAssignmentName(line.replace(/^[-*•\d.)(\s]+/, "")).slice(0, 140);
       const key = name.toLowerCase();
       if (name && !seen.has(key)) {
         seen.add(key);
@@ -956,16 +968,16 @@ function normalizeIdeas(parsed) {
     .filter((it) => it && (it.title || it.description));
 }
 
-// Offline fallback ideas, used only when the AI is unreachable.
-function fallbackAssignmentIdeas(assignment) {
-  const base = assignment || "the assignment";
+// Offline fallback ideas, used only when the AI is unreachable. Kept short and
+// context-free (the chat already names the assignment) to avoid repetitive text.
+function fallbackAssignmentIdeas() {
   return [
-    { title: "Formative AI feedback", description: `Give students AI-driven feedback while drafting ${base}, flagging gaps before submission.` },
-    { title: "Rubric-aligned auto-scoring", description: `Use AI to pre-score ${base} against the rubric so instructors review and adjust faster.` },
-    { title: "AI-moderated peer review", description: `Scale peer review on ${base} with AI that guides comments and checks for constructiveness.` },
-    { title: "Scaffolded prompts & exemplars", description: `Embed AI-generated prompts and worked examples inside ${base} to support struggling students.` },
-    { title: "Reflection & ePortfolio", description: `Capture AI-summarized student reflections tied to ${base} for longitudinal assessment.` },
-    { title: "Adaptive next steps", description: `Have AI recommend the next task or resource based on each student's work on ${base}.` }
+    { title: "Formative AI feedback", description: "Let students get AI feedback on their drafts so they can fix gaps before submitting." },
+    { title: "Rubric-aligned auto-scoring", description: "Use AI to pre-score work against the rubric for faster instructor review." },
+    { title: "AI-moderated peer review", description: "Guide peer feedback with AI that checks for clarity and constructiveness." },
+    { title: "Scaffolded prompts", description: "Offer AI-generated prompts and worked examples to support struggling students." },
+    { title: "Reflection summaries", description: "Have AI summarize student reflections to track learning over time." },
+    { title: "Adaptive next steps", description: "Let AI suggest each student's next task based on their work." }
   ];
 }
 
@@ -1094,14 +1106,20 @@ app.post("/api/assignment-ideas", async (req, res) => {
     }
 
     const systemPrompt =
-      "You help university faculty enhance a specific course assignment with AI. Be concrete, practical, and specific to the assignment given — avoid generic advice. Return STRICT JSON only, no prose or markdown.";
+      "You help university faculty enhance a specific course assignment with AI. Be concrete and specific to the assignment. Write plainly. Return STRICT JSON only, no prose or markdown.";
     const userPrompt = `Assignment: ${assignment}
 ${course ? `Course: ${course}\n` : ""}
-Propose up to 8 concrete ways the instructor could use AI to enhance THIS specific assignment. Each idea must be actionable and tied to the assignment.
+Suggest up to 6 distinct ways the instructor could use AI to enhance THIS assignment.
+
+Rules for each idea:
+- "title": 2-4 words.
+- "description": ONE short sentence (under 20 words) in plain language.
+- Do NOT repeat the assignment title in the description.
+- Vary the wording and the approach across ideas; do not reuse the same sentence pattern.
 
 Return JSON with exactly this schema:
 {
-  "ideas": [{ "title": "short title", "description": "one or two sentence concrete implementation" }]
+  "ideas": [{ "title": "short title", "description": "one short sentence" }]
 }`;
 
     let aiText = "";
@@ -1118,7 +1136,7 @@ Return JSON with exactly this schema:
     let source = ideas.length ? "ai" : "none";
 
     if (!ideas.length) {
-      ideas = fallbackAssignmentIdeas(assignment);
+      ideas = fallbackAssignmentIdeas();
       source = aiResponded ? "fallback" : "offline";
     }
 

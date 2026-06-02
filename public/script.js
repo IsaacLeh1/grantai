@@ -1061,20 +1061,15 @@ function generateProposalDraft(index, variant) {
   }, 700);
 }
 
-function generateImprovements(text) {
-  // produce 10 generic improvement ideas based on the assignment text
-  const base = text || 'the assignment';
+function generateImprovements() {
+  // Concise, context-free fallback ideas (the chat already names the assignment).
   return [
-    `1. Add AI-driven formative feedback during drafting for ${base}`,
-    `2. Integrate automated rubric-aligned scoring for quick instructor review of ${base}`,
-    `3. Use peer-review with AI moderation to scale feedback for ${base}`,
-    `4. Embed scaffolded prompts and exemplars inside ${base}`,
-    `5. Capture student reflections and ePortfolios linked to ${base}`,
-    `6. Add small low-stakes checks with instant AI hints for ${base}`,
-    `7. Use analytics dashboards to monitor student progress on ${base}`,
-    `8. Incorporate multimodal submissions (audio/video) with automated transcripts for ${base}`,
-    `9. Design adaptive pathways where AI recommends next tasks based on ${base}`,
-    `10. Pilot an opt-in study to compare AI-assisted vs traditional ${base}`
+    'Add AI feedback on drafts so students fix gaps before submitting.',
+    'Pre-score work against the rubric with AI for faster instructor review.',
+    'Scale peer review with AI that checks for clarity and constructiveness.',
+    'Offer AI-generated prompts and examples to support struggling students.',
+    'Have AI summarize student reflections to track learning over time.',
+    'Let AI suggest each student\'s next task based on their work.'
   ];
 }
 
