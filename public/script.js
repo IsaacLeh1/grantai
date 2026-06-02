@@ -355,6 +355,8 @@ let detectedAssignments = [];
 let detectedCourse = '';
 let lastImprovements = [];
 let agentDone = false;
+let proposalOptionLabels = [];
+let selectedIdeaText = '';
 
 // Send a free-form question to the AI and display the answer in the chat.
 async function askClarification(question) {
@@ -994,6 +996,7 @@ agentSatisfiedBtn?.addEventListener('click', () => {
       // build up to 4 option buttons (from API if available, otherwise default list)
       const defaults = ['Option A: Scalable Classroom Tool', 'Option B: Pilot Study with Analytics', 'Option C: Curriculum-Integrated ePortfolio', 'Option D: Adaptive Feedback Pilot'];
       const opts = Array.isArray(optionsArr) && optionsArr.length ? optionsArr.slice(0, 4) : defaults;
+      proposalOptionLabels = opts;
       const optionsHtml = opts.map((label, i) => `<button type="button" class="secondary idea-option" data-option-index="${i}">${escapeHtml(label)}</button>`).join('');
 
       summary.innerHTML = `
@@ -1009,6 +1012,7 @@ agentSatisfiedBtn?.addEventListener('click', () => {
 
           const index = Number(button.dataset.ideaIndex);
           const text = ideasArr[index];
+          selectedIdeaText = text;
 
           const rawReply = await aiFetchReply({ type: 'explain', idea: text, answers: agentAnswers });
           const bot = document.createElement('div');
@@ -1070,20 +1074,20 @@ agentSatisfiedBtn?.addEventListener('click', () => {
   fetchAndRenderIdeas();
 
   // Sending appends the message to the ideas messages area
-  ideasComposer.addEventListener('submit', (e) => {
+  ideasComposer.addEventListener('submit', async (e) => {
     e.preventDefault();
     const val = ideasInput.value.trim();
     if (!val) return;
     appendIdeasUserMessage(val);
     ideasInput.value = '';
-    // simulated AI reply
-    setTimeout(() => {
-      const bot = document.createElement('div');
-      bot.className = 'agent-msg bot';
-      bot.textContent = `AI: Thanks — I can draft a short proposal, a longer draft, or a bullet outline for: ${val}`;
-      ideasMessages.appendChild(bot);
-      ideasChat.scrollTop = ideasChat.scrollHeight;
-    }, 700);
+    const thinking = document.createElement('div');
+    thinking.className = 'agent-msg bot';
+    thinking.textContent = 'AI: Thinking…';
+    ideasMessages.appendChild(thinking);
+    ideasChat.scrollTop = ideasChat.scrollHeight;
+    const reply = await aiFetchReply({ type: 'chat', message: val, idea: selectedIdeaText, answers: agentAnswers });
+    thinking.textContent = reply;
+    ideasChat.scrollTop = ideasChat.scrollHeight;
   });
 
   agentOptions.appendChild(ideasChat);
@@ -1109,17 +1113,27 @@ function selectProposalOption(index) {
   });
 }
 
-function generateProposalDraft(index, variant) {
+async function generateProposalDraft(index, variant) {
   const follow = document.getElementById('agent2-followup');
-  follow.innerHTML = `<h4>Draft (${variant})</h4><p>Generating a ${variant.toLowerCase()} for option ${String.fromCharCode(65 + index)}...</p>`;
-  // placeholder content — in real app we'd call server
-  setTimeout(() => {
-    const content = `Proposal ${String.fromCharCode(65 + index)} (${variant})\n\nSummary based on your answers:\n` + agentAnswers.map(a => `${a.question}: ${a.answer}`).join('\n');
-    const pre = document.createElement('pre');
-    pre.textContent = content;
-    follow.innerHTML = '';
-    follow.appendChild(pre);
-  }, 700);
+  const letter = String.fromCharCode(65 + index);
+  follow.innerHTML = `<h4>Draft (${variant})</h4><p>Generating a ${variant.toLowerCase()} for option ${letter}…</p>`;
+  try {
+    const data = await fetchJSON('/api/proposal-draft', {
+      method: 'POST',
+      body: JSON.stringify({
+        variant,
+        option: proposalOptionLabels[index] || `Option ${letter}`,
+        idea: selectedIdeaText,
+        answers: agentAnswers
+      })
+    });
+    follow.innerHTML = `<h4>Draft (${variant}) — Option ${letter}</h4>`;
+    const body = document.createElement('div');
+    renderMarkdown(body, data.content || 'No draft returned.');
+    follow.appendChild(body);
+  } catch (err) {
+    follow.innerHTML = `<h4>Draft (${variant})</h4><p>Couldn't generate the draft right now: ${escapeHtml(err.message)}</p>`;
+  }
 }
 
 function generateImprovements() {
@@ -1135,13 +1149,14 @@ function generateImprovements() {
 }
 
 function generateGrantIdeas() {
+  // Offline fallback used only if /api/generate-ideas is unreachable.
   return [
-    'Pilot an AI-driven formative feedback tool for the assignment: t in t to improve t.',
-    'Develop an automated rubric-scoring pipeline for the assignment: t in t so instructors can scale feedback and compare rubric-aligned results across sections.',
-    'Create an AI-assisted peer review workflow for the assignment: t in t that provides guided comments and revision suggestions to increase draft quality.',
-    'Build analytics dashboards for t that track student progress, common misconceptions, and intervention opportunities tied to t.',
-    'Design an ePortfolio + reflection study for the assignment: t in t to capture longitudinal learning gains and showcase student work for assessment.',
-    'Run a small randomized pilot comparing AI-supported vs traditional feedback for the assignment: t in t to measure impact on rubric scores and completion rates.'
+    'Pilot an AI formative-feedback tool so students improve drafts before submitting.',
+    'Develop an automated rubric-scoring pipeline so instructors scale feedback across sections.',
+    'Create an AI-assisted peer-review workflow that guides comments and revisions.',
+    'Build an analytics dashboard tracking student progress and common misconceptions.',
+    'Design an ePortfolio + reflection study to capture longitudinal learning gains.',
+    'Run a small pilot comparing AI-supported vs traditional feedback on rubric scores.'
   ];
 }
 
