@@ -1005,16 +1005,9 @@ agentSatisfiedBtn?.addEventListener('click', () => {
       const ideasHtml = ideasArr
         .map((it, index) => `<li><button type="button" class="idea-link" data-idea-index="${index}">${escapeHtml(simplifyMessage(it))}</button></li>`)
         .join('');
-      // build up to 4 option buttons (from API if available, otherwise default list)
-      const defaults = ['Option A: Scalable Classroom Tool', 'Option B: Pilot Study with Analytics', 'Option C: Curriculum-Integrated ePortfolio', 'Option D: Adaptive Feedback Pilot'];
-      const opts = Array.isArray(optionsArr) && optionsArr.length ? optionsArr.slice(0, 4) : defaults;
-      proposalOptionLabels = opts;
-      const optionsHtml = opts.map((label, i) => `<button type="button" class="secondary idea-option" data-option-index="${i}">${escapeHtml(label)}</button>`).join('');
-
       summary.innerHTML = `
         <strong>Here is a compact summary of the ideas.</strong>
         <ul class="idea-summary-list">${ideasHtml}</ul>
-        <div class="idea-summary-options">${optionsHtml}</div>
       `;
 
       summary.querySelectorAll(".idea-link").forEach((button) => {
@@ -1032,16 +1025,6 @@ agentSatisfiedBtn?.addEventListener('click', () => {
           bot.textContent = rawReply;
           ideasMessages.appendChild(bot);
           ideasChat.scrollTop = ideasChat.scrollHeight;
-        });
-      });
-
-      summary.querySelectorAll('.idea-option').forEach((button) => {
-        button.addEventListener('click', (e) => {
-          summary.querySelectorAll('.idea-option').forEach((item) => item.classList.remove('selected'));
-          button.classList.add('selected');
-
-          const idx = Number(button.dataset.optionIndex);
-          selectProposalOption(idx);
         });
       });
 
