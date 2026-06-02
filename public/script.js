@@ -351,6 +351,35 @@ const agentQuestions = [
 let agentAnswers = [];
 let currentQuestionIndex = 0;
 let awaitingImprovementsFollowup = false;
+let detectedAssignments = [];
+
+// Render the assignments the server extracted from the uploaded syllabus.
+// Returns true if at least one assignment was found.
+function appendSyllabusAssignments(data) {
+  if (!data) return false;
+  const assignments = Array.isArray(data.assignments) ? data.assignments : [];
+
+  if (data.summary) {
+    appendAgentMessage(`I read your syllabus${data.course ? ` for ${data.course}` : ''}. ${data.summary}`);
+  }
+
+  if (assignments.length) {
+    detectedAssignments = assignments;
+    appendAgentMessage(`I found ${assignments.length} assignment${assignments.length > 1 ? 's' : ''} in your syllabus:`);
+    const ul = document.createElement('ul');
+    assignments.forEach((a) => {
+      const li = document.createElement('li');
+      li.textContent = a.description ? `${a.name} — ${a.description}` : a.name;
+      ul.appendChild(li);
+    });
+    agentMessages.appendChild(ul);
+    agentChat.scrollTop = agentChat.scrollHeight;
+    return true;
+  }
+
+  appendAgentMessage("I couldn't automatically detect assignments in that file (it may be a scanned image or have an unusual layout). You can type them in below.");
+  return false;
+}
 
 // Syllabus-only widget (visible before chat)
 const syllabusWidget = document.getElementById('syllabus-widget');
@@ -388,15 +417,20 @@ if (syllabusWidgetInput && syllabusUpload && agentChat && agentInputForm) {
       appendUserMessage(file.name);
       let recordedName = file.name;
       try {
+        appendAgentMessage('Reading your syllabus…');
         const fd = new FormData();
         fd.append('syllabus', file);
         const res = await fetch('/api/upload-syllabus', { method: 'POST', body: fd });
+        const data = await res.json().catch(() => ({}));
         if (res.ok) {
-          const data = await res.json().catch(() => ({}));
-          recordedName = data.filename || data.path || recordedName;
+          recordedName = data.filename || recordedName;
+          appendSyllabusAssignments(data);
+        } else {
+          appendAgentMessage(`I couldn't process that file: ${data.error || res.statusText}`);
         }
       } catch (err) {
-        console.log('Syllabus upload failed (silently):', err);
+        console.error('Syllabus upload failed:', err);
+        appendAgentMessage('Something went wrong reading that file. You can type your assignments in below.');
       }
       const combinedAnswer = recordedName;
       agentAnswers.push({ question: agentQuestions[0], answer: combinedAnswer, fileName: file.name });
@@ -535,17 +569,21 @@ agentInputForm?.addEventListener('submit', async (e) => {
     let recordedName = file ? file.name : '';
     if (file) {
       appendUserMessage(file.name);
-      // attempt to upload if server endpoint exists; fall back to recording filename
       try {
+        appendAgentMessage('Reading your syllabus…');
         const fd = new FormData();
         fd.append('syllabus', file);
         const res = await fetch('/api/upload-syllabus', { method: 'POST', body: fd });
+        const data = await res.json().catch(() => ({}));
         if (res.ok) {
-          const data = await res.json().catch(() => ({}));
-          recordedName = data.filename || data.path || recordedName;
+          recordedName = data.filename || recordedName;
+          appendSyllabusAssignments(data);
+        } else {
+          appendAgentMessage(`I couldn't process that file: ${data.error || res.statusText}`);
         }
       } catch (err) {
-        console.log('Syllabus upload failed (silently):', err);
+        console.error('Syllabus upload failed:', err);
+        appendAgentMessage('Something went wrong reading that file. You can type your assignments in below.');
       }
     }
     if (text) {
