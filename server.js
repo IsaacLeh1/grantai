@@ -1160,6 +1160,160 @@ Return JSON with exactly this schema:
   }
 });
 
+// Turn the collected agent Q&A into a readable context block for prompts.
+function answersToText(answers) {
+  if (!Array.isArray(answers)) return "";
+  return answers
+    .filter((a) => a && (a.question || a.answer))
+    .map((a) => `- ${safe(a.question)}: ${safe(a.answer)}`)
+    .join("\n");
+}
+
+// Flatten a list that may contain strings or {title,description} objects into strings.
+function toStringList(list) {
+  if (!Array.isArray(list)) return [];
+  return list
+    .map((it) => {
+      if (typeof it === "string") return it.trim();
+      if (it && typeof it === "object") {
+        const t = it.title || it.name || it.label || "";
+        const d = it.description || it.detail || it.text || "";
+        return [t, d].filter(Boolean).join(": ").trim();
+      }
+      return "";
+    })
+    .filter(Boolean);
+}
+
+app.post("/api/generate-ideas", async (req, res) => {
+  try {
+    const context = answersToText(req.body?.answers);
+
+    const systemPrompt =
+      "You help UVU faculty turn their course and assignment notes into fundable teaching-with-AI grant ideas. Return STRICT JSON only, no prose or markdown.";
+    const userPrompt = `Faculty answers:
+${context || "(none provided)"}
+
+Based on these answers, produce grant ideas and a few proposal direction options.
+
+Return JSON with exactly this schema:
+{
+  "ideas": ["one concise sentence per idea, up to 6"],
+  "options": ["Option A: short label", "Option B: short label", "Option C: short label", "Option D: short label"]
+}`;
+
+    let aiText = "";
+    try {
+      aiText = (await callOpenAI(systemPrompt, userPrompt, 900)) || "";
+    } catch (e) {
+      console.error("generate-ideas AI error:", e.message);
+    }
+    const aiResponded = Boolean(aiText && aiText.trim());
+
+    const parsed =
+      parseJsonSafely(aiText) || parseJsonSafely(extractFirstJsonBlock(aiText)) || null;
+    let ideas = toStringList(parsed?.ideas);
+    let options = toStringList(parsed?.options);
+
+    if (!ideas.length) {
+      ideas = [
+        "Pilot an AI formative-feedback tool so students improve drafts before submitting.",
+        "Build an AI rubric-scoring pipeline so instructors scale feedback across sections.",
+        "Create an AI-assisted peer-review workflow that guides comments and revisions.",
+        "Run a small study comparing AI-supported vs traditional feedback on rubric scores."
+      ];
+    }
+    if (options.length < 2) {
+      options = [
+        "Option A: Scalable Classroom Tool",
+        "Option B: Pilot Study with Analytics",
+        "Option C: Curriculum-Integrated ePortfolio",
+        "Option D: Adaptive Feedback Pilot"
+      ];
+    }
+
+    console.log(`[generate-ideas] aiResponded=${aiResponded} ideas=${ideas.length} options=${options.length}`);
+    return res.json({ ideas, options, aiResponded });
+  } catch (error) {
+    console.error("generate-ideas error:", error.message);
+    return res.status(500).json({ error: "Unable to generate ideas", detail: error.message });
+  }
+});
+
+app.post("/api/ai-reply", async (req, res) => {
+  try {
+    const type = safe(req.body?.type);
+    const idea = safe(req.body?.idea);
+    const message = safe(req.body?.message);
+    const context = answersToText(req.body?.answers);
+
+    const systemPrompt =
+      "You are a concise grant-writing assistant for UVU faculty. Answer in plain language, at most a few sentences.";
+    const userPrompt =
+      type === "explain"
+        ? `Faculty context:\n${context}\n\nIn 2-3 sentences, explain how the instructor could pursue this grant idea:\n"${idea}"`
+        : `Faculty context:\n${context}\n\nQuestion: ${message || idea}`;
+
+    let content = "";
+    try {
+      content = (await callOpenAI(systemPrompt, userPrompt, 400)) || "";
+    } catch (e) {
+      console.error("ai-reply AI error:", e.message);
+    }
+    const aiResponded = Boolean(content && content.trim());
+    if (!aiResponded) {
+      content = "I can't reach the AI model right now. Please try again shortly.";
+    }
+
+    console.log(`[ai-reply] type=${type || "chat"} aiResponded=${aiResponded}`);
+    return res.json({ content: content.trim(), aiResponded });
+  } catch (error) {
+    console.error("ai-reply error:", error.message);
+    return res.status(500).json({ error: "Unable to reply", detail: error.message });
+  }
+});
+
+app.post("/api/proposal-draft", async (req, res) => {
+  try {
+    const variant = safe(req.body?.variant);
+    const optionLabel = safe(req.body?.option);
+    const idea = safe(req.body?.idea);
+    const context = answersToText(req.body?.answers);
+
+    const lengthInstruction = /long/i.test(variant)
+      ? "a detailed multi-paragraph draft with clear sections"
+      : /bullet|outline/i.test(variant)
+      ? "a concise bullet-point outline"
+      : "a short 1-2 paragraph draft";
+
+    const systemPrompt =
+      "You are a grant-writing copilot for UVU faculty. Write clear, practical proposal content with measurable outcomes where possible. Return markdown.";
+    const userPrompt = `Faculty answers:
+${context || "(none provided)"}
+${optionLabel ? `\nSelected direction: ${optionLabel}` : ""}${idea ? `\nIdea focus: ${idea}` : ""}
+
+Write ${lengthInstruction} for a teaching-with-AI grant proposal based on the above.`;
+
+    let content = "";
+    try {
+      content = (await callOpenAI(systemPrompt, userPrompt, 1100)) || "";
+    } catch (e) {
+      console.error("proposal-draft AI error:", e.message);
+    }
+    const aiResponded = Boolean(content && content.trim());
+    if (!aiResponded) {
+      content =
+        "I can't reach the AI model right now to draft this. Make sure the AI backend is configured, then try again.";
+    }
+
+    console.log(`[proposal-draft] variant="${variant}" aiResponded=${aiResponded}`);
+    return res.json({ content: content.trim(), aiResponded });
+  } catch (error) {
+    console.error("proposal-draft error:", error.message);
+    return res.status(500).json({ error: "Unable to draft proposal", detail: error.message });
+  }
+});
+
 app.post("/api/ask", async (req, res) => {
   try {
     const question = safe(req.body?.question);
