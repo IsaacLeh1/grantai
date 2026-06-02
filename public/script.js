@@ -365,7 +365,10 @@ function appendSyllabusAssignments(data) {
 
   if (assignments.length) {
     detectedAssignments = assignments;
-    appendAgentMessage(`I found ${assignments.length} assignment${assignments.length > 1 ? 's' : ''} in your syllabus:`);
+    const prefix = data.source === 'heuristic'
+      ? `I pulled ${assignments.length} likely assignment${assignments.length > 1 ? 's' : ''} from your syllabus (rough match — the AI model wasn't available for a cleaner read):`
+      : `I found ${assignments.length} assignment${assignments.length > 1 ? 's' : ''} in your syllabus:`;
+    appendAgentMessage(prefix);
     const ul = document.createElement('ul');
     assignments.forEach((a) => {
       const li = document.createElement('li');
@@ -377,7 +380,12 @@ function appendSyllabusAssignments(data) {
     return true;
   }
 
-  appendAgentMessage("I couldn't automatically detect assignments in that file (it may be a scanned image or have an unusual layout). You can type them in below.");
+  // Nothing found — explain why as specifically as we can.
+  if (data.aiResponded === false) {
+    appendAgentMessage(data.note || "The AI model didn't respond, so I couldn't read the assignments. Make sure Ollama is running, then try again. You can also type them in below.");
+  } else {
+    appendAgentMessage("I couldn't automatically detect assignments in that file (it may be a scanned image or have an unusual layout). You can type them in below.");
+  }
   return false;
 }
 
