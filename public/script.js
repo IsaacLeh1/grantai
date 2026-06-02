@@ -910,7 +910,7 @@ agentSatisfiedBtn?.addEventListener('click', () => {
 
   const botIntro = document.createElement('div');
   botIntro.className = 'agent-msg bot';
-  botIntro.textContent = 'AI: Click an idea or type a question.';
+  botIntro.textContent = 'Click an idea or type a question.';
   ideasMessages.appendChild(botIntro);
 
   async function aiFetchReply(payload) {
@@ -919,13 +919,12 @@ agentSatisfiedBtn?.addEventListener('click', () => {
         method: 'POST',
         body: JSON.stringify(payload)
       });
-      if (!data) return 'AI: No response.';
+      if (!data) return 'No response.';
       const raw = Array.isArray(data.content) ? data.content.join(' ') : (data.content || '');
-      const simple = simplifyMessage(raw);
-      return `AI: ${simple}`;
+      return raw.trim() || 'No response.';
     } catch (err) {
       // Do not expose raw error text to the chat; provide a concise fallback
-      return 'AI: Showing offline suggestions.';
+      return 'Showing offline suggestions.';
     }
   }
 
@@ -965,7 +964,7 @@ agentSatisfiedBtn?.addEventListener('click', () => {
     // show a loading bot message
     const loading = document.createElement('div');
     loading.className = 'agent-msg bot';
-    loading.textContent = 'AI: Generating ideas...';
+    loading.textContent = 'Generating ideas…';
     ideasMessages.appendChild(loading);
     ideasChat.scrollTop = ideasChat.scrollHeight;
 
@@ -1000,7 +999,7 @@ agentSatisfiedBtn?.addEventListener('click', () => {
       const optionsHtml = opts.map((label, i) => `<button type="button" class="secondary idea-option" data-option-index="${i}">${escapeHtml(label)}</button>`).join('');
 
       summary.innerHTML = `
-        <strong>AI: Here is a compact summary of the ideas.</strong>
+        <strong>Here is a compact summary of the ideas.</strong>
         <ul class="idea-summary-list">${ideasHtml}</ul>
         <div class="idea-summary-options">${optionsHtml}</div>
       `;
@@ -1039,14 +1038,14 @@ agentSatisfiedBtn?.addEventListener('click', () => {
       loading.remove();
       const errMsg = document.createElement('div');
       errMsg.className = 'agent-msg bot';
-      errMsg.textContent = 'AI: Showing offline suggestions.';
+      errMsg.textContent = 'Showing offline suggestions.';
       ideasMessages.appendChild(errMsg);
       // fallback render static ideas and options in a single summary message
       const fallback = generateGrantIdeas();
       const fallbackSummary = document.createElement('div');
       fallbackSummary.className = 'agent-msg bot';
       fallbackSummary.innerHTML = `
-        <strong>AI: Offline summary of ideas.</strong>
+        <strong>Offline summary of ideas.</strong>
         <ul class="idea-summary-list">${fallback.map((it, index) => `<li><button type="button" class="idea-link" data-idea-index="${index}">${escapeHtml(simplifyMessage(it))}</button></li>`).join('')}</ul>
       `;
       fallbackSummary.querySelectorAll(".idea-link").forEach((button) => {
@@ -1082,7 +1081,7 @@ agentSatisfiedBtn?.addEventListener('click', () => {
     ideasInput.value = '';
     const thinking = document.createElement('div');
     thinking.className = 'agent-msg bot';
-    thinking.textContent = 'AI: Thinking…';
+    thinking.textContent = 'Thinking…';
     ideasMessages.appendChild(thinking);
     ideasChat.scrollTop = ideasChat.scrollHeight;
     const reply = await aiFetchReply({ type: 'chat', message: val, idea: selectedIdeaText, answers: agentAnswers });
