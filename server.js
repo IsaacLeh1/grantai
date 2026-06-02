@@ -553,8 +553,9 @@ async function callOpenAIRemote(systemPrompt, userPrompt, maxOutputTokens = 800)
 // Ollama server, but with LOCAL_LLM_API_KEY set it also works with hosted
 // providers like Groq or OpenRouter (needed when the site runs in the cloud).
 async function callLocalLLM(systemPrompt, userPrompt, maxOutputTokens = 800) {
-  const baseUrl = (process.env.LOCAL_LLM_BASE_URL || "http://localhost:11434/v1").replace(/\/+$/, "");
-  const model = process.env.LOCAL_LLM_MODEL || "llama3";
+  // Trim env values — pasted dashboard vars often carry a stray trailing newline/space.
+  const baseUrl = (safe(process.env.LOCAL_LLM_BASE_URL) || "http://localhost:11434/v1").replace(/\/+$/, "");
+  const model = safe(process.env.LOCAL_LLM_MODEL) || "llama3";
   const timeoutMs = Number(process.env.LOCAL_LLM_TIMEOUT_MS || 120000);
   const apiKey = safe(process.env.LOCAL_LLM_API_KEY);
 
