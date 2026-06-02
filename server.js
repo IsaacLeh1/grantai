@@ -478,7 +478,7 @@ async function gradeProposalAgainstRubric({ proposalText, rubric, facultySubmiss
     }
   }
 
-  const systemPrompt = "You are a grant rubric evaluator for UVU proposals. Return strict JSON only.";
+  const systemPrompt = "You are a grant rubric evaluator for UVU proposals. In any rationale or improvement text, address the applicant directly as \"you\" — never \"the instructor\" or \"the faculty\". Return strict JSON only.";
   const userPrompt = `Grade this proposal against the rubric using the rubric's defined score levels, including 0 and 0.5 where applicable. Return JSON object with this schema only:\n{\n  "criteria": [{"id":"string","name":"string","score":number,"maxScore":4,"weightPercent":number,"rationale":"string","improvement":"string"}]\n}\n\nRubric:\n${JSON.stringify(rubric.criteria, null, 2)}\n\nFaculty submission:\n${JSON.stringify(facultySubmission, null, 2)}\n\nProposal draft:\n${proposalText}`;
 
   let aiText = "";
@@ -673,7 +673,7 @@ app.post("/api/explore", async (req, res) => {
       }
     }
 
-    const systemPrompt = "You help UVU faculty find grant-worthy teaching ideas. Keep responses concise and practical. Return markdown with headings and bullet points.";
+    const systemPrompt = "You help a UVU faculty member find grant-worthy teaching ideas. Address them directly as \"you\" (e.g., \"you could…\") — never \"the instructor\" or \"the faculty\". Keep responses concise and practical. Return markdown with headings and bullet points.";
     const userPrompt = `Using this rubric:\n${JSON.stringify(rubric.criteria, null, 2)}\n\nFaculty context:\n${JSON.stringify(context, null, 2)}\n\nProvide exactly 3 grant idea options. For each option include:\n1) Title\n2) Why it aligns to rubric criteria\n3) Estimated budget range\n4) Risks and mitigation\n5) First 2 implementation steps this semester.`;
 
     let text = "";
@@ -728,7 +728,7 @@ app.post("/api/execute", async (req, res) => {
       payload.autofillVariant = safe(body.autofillVariant);
     }
 
-    const systemPrompt = "You are a grant writing copilot for UVU faculty. Draft clear proposal content with practical language and measurable outcomes. Return markdown only.";
+    const systemPrompt = "You are a grant writing copilot for a UVU faculty member. Write to them directly, using \"you\" and \"your course/assignment\" — never \"the instructor\" or \"the faculty\". Draft clear proposal content with practical language and measurable outcomes. Return markdown only.";
     const userPrompt = `Rubric criteria:\n${JSON.stringify(rubric.criteria, null, 2)}\n\nFaculty submission:\n${JSON.stringify(payload, null, 2)}\n\nCreate a concise draft proposal with sections: Project Summary, Need Statement, Proposed Intervention, Implementation Plan, Assessment Plan, Budget Justification, Sustainability, and 30-second Pitch.`;
 
     let text = "";
@@ -818,7 +818,7 @@ app.post("/api/software-chat", async (req, res) => {
     const course = safe(req.body?.course);
     const idea = safe(req.body?.idea);
 
-    const systemPrompt = "You are a software advisor for faculty grant proposals. Recommend from the provided list only. Be specific and concise.";
+    const systemPrompt = "You are a software advisor for a faculty member's grant proposal. Address them directly as \"you\" — never \"the instructor\" or \"the faculty\". Recommend from the provided list only. Be specific and concise.";
     const userPrompt = `Available software:\n${JSON.stringify(software, null, 2)}\n\nUser question: ${message}\nCourse context: ${course}\nIdea context: ${idea}\n\nReturn: 1) Top 2 recommendations and why, 2) cost notes, 3) next step for procurement or trial.`;
 
     let text = "";
@@ -1115,10 +1115,10 @@ app.post("/api/assignment-ideas", async (req, res) => {
     }
 
     const systemPrompt =
-      "You help university faculty enhance a specific course assignment with AI. Be concrete and specific to the assignment. Write plainly. Return STRICT JSON only, no prose or markdown.";
+      "You help a faculty member enhance a specific course assignment with AI. Address them directly as \"you\" — never \"the instructor\" or \"the faculty\". Be concrete and specific to the assignment. Write plainly. Return STRICT JSON only, no prose or markdown.";
     const userPrompt = `Assignment: ${assignment}
 ${course ? `Course: ${course}\n` : ""}
-Suggest up to 6 distinct ways the instructor could use AI to enhance THIS assignment.
+Suggest up to 6 distinct ways you could use AI to enhance THIS assignment.
 
 Rules for each idea:
 - "title": 2-4 words.
@@ -1190,7 +1190,7 @@ app.post("/api/generate-ideas", async (req, res) => {
     const context = answersToText(req.body?.answers);
 
     const systemPrompt =
-      "You help UVU faculty turn their course and assignment notes into fundable teaching-with-AI grant ideas. Return STRICT JSON only, no prose or markdown.";
+      "You help a UVU faculty member turn their course and assignment notes into fundable teaching-with-AI grant ideas. Address them directly as \"you\" — never \"the instructor\" or \"the faculty\". Return STRICT JSON only, no prose or markdown.";
     const userPrompt = `Faculty answers:
 ${context || "(none provided)"}
 
@@ -1248,10 +1248,10 @@ app.post("/api/ai-reply", async (req, res) => {
     const context = answersToText(req.body?.answers);
 
     const systemPrompt =
-      "You are a concise grant-writing assistant for UVU faculty. Answer in plain language, at most a few sentences.";
+      "You are a concise grant-writing assistant for a UVU faculty member. Address them directly as \"you\" — never \"the instructor\" or \"the faculty\". Answer in plain language, at most a few sentences.";
     const userPrompt =
       type === "explain"
-        ? `Faculty context:\n${context}\n\nIn 2-3 sentences, explain how the instructor could pursue this grant idea:\n"${idea}"`
+        ? `Your context:\n${context}\n\nIn 2-3 sentences, explain how you could pursue this grant idea:\n"${idea}"`
         : `Faculty context:\n${context}\n\nQuestion: ${message || idea}`;
 
     let content = "";
@@ -1287,7 +1287,7 @@ app.post("/api/proposal-draft", async (req, res) => {
       : "a short 1-2 paragraph draft";
 
     const systemPrompt =
-      "You are a grant-writing copilot for UVU faculty. Write clear, practical proposal content with measurable outcomes where possible. Return markdown.";
+      "You are a grant-writing copilot for a UVU faculty member. Write to them directly, using \"you\" and \"your course/assignment\" — never \"the instructor\" or \"the faculty\". Write clear, practical proposal content with measurable outcomes where possible. Return markdown.";
     const userPrompt = `Faculty answers:
 ${context || "(none provided)"}
 ${optionLabel ? `\nSelected direction: ${optionLabel}` : ""}${idea ? `\nIdea focus: ${idea}` : ""}
@@ -1337,7 +1337,7 @@ app.post("/api/ask", async (req, res) => {
     }
 
     const systemPrompt =
-      "You are a helpful assistant for UVU faculty writing teaching-with-AI grant proposals. Answer the question clearly and concisely in plain language (a short paragraph). If it relates to their proposal, be specific to the context given.";
+      "You are a helpful assistant for a UVU faculty member writing a teaching-with-AI grant proposal. Address them directly as \"you\" — never \"the instructor\" or \"the faculty\". Answer the question clearly and concisely in plain language (a short paragraph). If it relates to your proposal, be specific to the context given.";
     const userPrompt = `${contextLines.length ? contextLines.join("\n") + "\n\n" : ""}Question: ${question}`;
 
     let answer = "";
@@ -1371,13 +1371,13 @@ app.post("/api/idea-detail", async (req, res) => {
     }
 
     const systemPrompt =
-      "You help university faculty implement a specific AI enhancement for one of their assignments. Be concrete, practical, and specific. Write plain prose — no headings or bullet lists.";
+      "You help a faculty member implement a specific AI enhancement for one of their assignments. Address them directly as \"you\" (e.g., \"you could…\", \"you would set up…\") — never \"the instructor\" or \"the faculty\". Be concrete, practical, and specific. Write plain prose — no headings or bullet lists.";
     const userPrompt = `Assignment: ${assignment || "(unspecified)"}${course ? `\nCourse: ${course}` : ""}
 
-The instructor wants to know more about this AI enhancement idea:
+You want to know more about this AI enhancement idea:
 "${idea}"
 
-In 3-5 sentences, explain how to actually put this in place for this assignment: the tool or approach to use, the concrete steps to set it up, and one thing to watch out for.`;
+In 3-5 sentences, explain how you would actually put this in place for this assignment: the tool or approach to use, the concrete steps to set it up, and one thing to watch out for. Address me as "you".`;
 
     let content = "";
     try {
