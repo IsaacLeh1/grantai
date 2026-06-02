@@ -874,6 +874,64 @@ app.post("/api/reviews", async (req, res) => {
   }
 });
 
+// Coerce whatever JSON shape the model returned into a clean assignment list.
+// Handles: {assignments:[...]}, alternate keys, top-level arrays, and arrays of
+// plain strings (which local models commonly emit instead of objects).
+function normalizeAssignments(parsed) {
+  if (!parsed) return [];
+  let list = null;
+  if (Array.isArray(parsed)) {
+    list = parsed;
+  } else if (typeof parsed === "object") {
+    list = parsed.assignments || parsed.assessments || parsed.tasks || parsed.items || null;
+  }
+  if (!Array.isArray(list)) return [];
+
+  return list
+    .map((a) => {
+      if (typeof a === "string") {
+        return { name: a.trim(), description: "" };
+      }
+      if (a && typeof a === "object") {
+        const name = a.name || a.title || a.assignment || a.assessment || a.task || "";
+        const description = a.description || a.details || a.detail || a.notes || a.due || "";
+        return { name: String(name).trim(), description: String(description || "").trim() };
+      }
+      return null;
+    })
+    .filter((a) => a && a.name);
+}
+
+// Last-resort fallback: scan the raw syllabus text for assignment-like lines so
+// the user always gets something from their actual file, even if the AI fails.
+function heuristicAssignments(text) {
+  const keywords = [
+    "assignment", "assessment", "essay", "paper", "project", "exam", "midterm",
+    "final", "quiz", "homework", "lab", "presentation", "portfolio", "report",
+    "discussion", "participation", "capstone", "thesis", "journal", "reflection",
+    "worksheet", "problem set", "case study"
+  ];
+  // Word-boundary match so "exam" doesn't match "example", "thesis" not "hypothesis", etc.
+  const keywordRe = new RegExp(`\\b(${keywords.join("|")})\\b`, "i");
+  const lines = String(text || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const seen = new Set();
+  const found = [];
+
+  for (const line of lines) {
+    if (line.length < 4 || line.length > 160) continue;
+    if (keywordRe.test(line)) {
+      const name = line.replace(/^[-*•\d.)(\s]+/, "").trim().slice(0, 140);
+      const key = name.toLowerCase();
+      if (name && !seen.has(key)) {
+        seen.add(key);
+        found.push({ name, description: "" });
+      }
+    }
+    if (found.length >= 20) break;
+  }
+  return found;
+}
+
 const syllabusUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 } // 10 MB
@@ -945,15 +1003,34 @@ ${snippet}`;
     } catch (e) {
       console.error("Syllabus parse AI error:", e.message);
     }
+    const aiResponded = Boolean(aiText && aiText.trim());
 
     const parsed =
       parseJsonSafely(aiText) || parseJsonSafely(extractFirstJsonBlock(aiText)) || null;
-    const assignments = Array.isArray(parsed?.assignments)
-      ? parsed.assignments.filter((a) => a && a.name).map((a) => ({
-          name: String(a.name).trim(),
-          description: a.description ? String(a.description).trim() : ""
-        }))
-      : [];
+    let assignments = normalizeAssignments(parsed);
+    let source = assignments.length ? "ai" : "none";
+
+    // If the model produced nothing usable, fall back to scanning the text itself.
+    if (!assignments.length) {
+      const heuristic = heuristicAssignments(text);
+      if (heuristic.length) {
+        assignments = heuristic;
+        source = "heuristic";
+      }
+    }
+
+    let note = "";
+    if (!aiResponded) {
+      note =
+        "The AI model didn't respond. Make sure Ollama is running (`ollama serve`) and the model is pulled (`ollama pull llama3`), or set a valid OPENAI_API_KEY.";
+    }
+
+    console.log(
+      `[upload-syllabus] file="${req.file.originalname}" chars=${text.length} aiResponded=${aiResponded} assignments=${assignments.length} source=${source}`
+    );
+    if (!assignments.length && aiResponded) {
+      console.log(`[upload-syllabus] AI returned unparseable output: ${aiText.slice(0, 300)}`);
+    }
 
     return res.json({
       filename: req.file.originalname,
@@ -961,7 +1038,9 @@ ${snippet}`;
       summary: parsed?.summary || "",
       assignments,
       charCount: text.length,
-      source: assignments.length ? "ai" : "none"
+      aiResponded,
+      note,
+      source
     });
   } catch (error) {
     console.error("upload-syllabus error:", error.message);
