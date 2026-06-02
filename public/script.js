@@ -370,10 +370,9 @@ function appendSyllabusAssignments(data) {
       : `I found ${assignments.length} assignment${assignments.length > 1 ? 's' : ''} in your syllabus:`;
     appendAgentMessage(prefix);
     const ol = document.createElement('ol');
-    assignments.forEach((a, i) => {
+    assignments.forEach((a) => {
       const li = document.createElement('li');
-      const label = a.description ? `${a.name} — ${a.description}` : a.name;
-      li.textContent = `${i + 1}. ${label}`;
+      li.textContent = a.description ? `${a.name} — ${a.description}` : a.name;
       ol.appendChild(li);
     });
     agentMessages.appendChild(ol);
