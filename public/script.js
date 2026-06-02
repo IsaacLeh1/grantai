@@ -592,17 +592,30 @@ agentInputForm?.addEventListener('submit', async (e) => {
       return;
     }
 
-    // If user provided a number (or comma-separated numbers), show details for each
+    // If user provided a number (or comma-separated numbers), expand each with AI detail.
     const picks = reply.split(/[,\s]+/).map((s) => Number(s)).filter((n) => Number.isFinite(n) && n >= 1);
     if (picks.length) {
-      picks.slice(0, 4).forEach((p) => {
+      const focus = (agentAnswers.find((a) => (a.question || '').toLowerCase().includes('assignment')) || {}).answer || '';
+      for (const p of picks.slice(0, 4)) {
         const idx = Math.max(0, p - 1);
         const item = lastImprovements[idx];
-        const detail = item
-          ? (item.title ? `${item.title} — ${item.description}` : item.description)
-          : `No detail available for option ${p}.`;
-        appendAgentMessage(`Detail for option ${p}: ${detail}`);
-      });
+        if (!item) {
+          appendAgentMessage(`No detail available for option ${p}.`);
+          continue;
+        }
+        const ideaText = item.title ? `${item.title} — ${item.description}` : item.description;
+        appendAgentMessage(`<strong>Option ${p}: ${ideaText}</strong>`);
+        appendAgentMessage('Looking into that…');
+        try {
+          const data = await fetchJSON('/api/idea-detail', {
+            method: 'POST',
+            body: JSON.stringify({ idea: ideaText, assignment: focus, course: detectedCourse })
+          });
+          appendAgentMessage(data.content || 'No additional detail available.');
+        } catch (err) {
+          appendAgentMessage('I couldn\'t get more detail right now. Please try again.');
+        }
+      }
       appendAgentMessage('Would you like more details on another option, or shall we continue? (say a number or "no")');
       // stay in this follow-up state to allow multiple picks
       awaitingImprovementsFollowup = true;
