@@ -1361,6 +1361,43 @@ app.post("/api/ask", async (req, res) => {
   }
 });
 
+app.post("/api/idea-detail", async (req, res) => {
+  try {
+    const idea = safe(req.body?.idea);
+    const assignment = safe(req.body?.assignment);
+    const course = safe(req.body?.course);
+    if (!idea) {
+      return res.status(400).json({ error: "Missing idea" });
+    }
+
+    const systemPrompt =
+      "You help university faculty implement a specific AI enhancement for one of their assignments. Be concrete, practical, and specific. Write plain prose — no headings or bullet lists.";
+    const userPrompt = `Assignment: ${assignment || "(unspecified)"}${course ? `\nCourse: ${course}` : ""}
+
+The instructor wants to know more about this AI enhancement idea:
+"${idea}"
+
+In 3-5 sentences, explain how to actually put this in place for this assignment: the tool or approach to use, the concrete steps to set it up, and one thing to watch out for.`;
+
+    let content = "";
+    try {
+      content = (await callOpenAI(systemPrompt, userPrompt, 500)) || "";
+    } catch (e) {
+      console.error("idea-detail AI error:", e.message);
+    }
+    const aiResponded = Boolean(content && content.trim());
+    if (!aiResponded) {
+      content = "I can't reach the AI model right now to expand on this. Please try again shortly.";
+    }
+
+    console.log(`[idea-detail] aiResponded=${aiResponded} idea="${idea.slice(0, 50)}"`);
+    return res.json({ content: content.trim(), aiResponded });
+  } catch (error) {
+    console.error("idea-detail error:", error.message);
+    return res.status(500).json({ error: "Unable to expand idea", detail: error.message });
+  }
+});
+
 app.get("*", (_req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
