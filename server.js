@@ -496,10 +496,11 @@ async function gradeProposalAgainstRubric({ proposalText, rubric, facultySubmiss
   };
 }
 
-async function callOpenAI(systemPrompt, userPrompt, maxOutputTokens = 800) {
+// Calls OpenAI's Responses API. Throws on any failure so the caller can fall back.
+async function callOpenAIRemote(systemPrompt, userPrompt, maxOutputTokens = 800) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    return null;
+    throw new Error("OPENAI_API_KEY is not configured");
   }
 
   const model = process.env.OPENAI_MODEL || "gpt-4.1-mini";
@@ -533,6 +534,67 @@ async function callOpenAI(systemPrompt, userPrompt, maxOutputTokens = 800) {
 
   const data = await response.json();
   return data.output_text || "";
+}
+
+// Calls a local LLM (Ollama by default) via the OpenAI-compatible /chat/completions endpoint.
+async function callLocalLLM(systemPrompt, userPrompt, maxOutputTokens = 800) {
+  const baseUrl = (process.env.LOCAL_LLM_BASE_URL || "http://localhost:11434/v1").replace(/\/+$/, "");
+  const model = process.env.LOCAL_LLM_MODEL || "llama3";
+  const timeoutMs = Number(process.env.LOCAL_LLM_TIMEOUT_MS || 120000);
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  let response;
+  try {
+    response = await fetch(`${baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model,
+        temperature: 0.4,
+        max_tokens: maxOutputTokens,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt }
+        ]
+      }),
+      signal: controller.signal
+    });
+  } finally {
+    clearTimeout(timer);
+  }
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Local LLM error ${response.status}: ${errText}`);
+  }
+
+  const data = await response.json();
+  return data?.choices?.[0]?.message?.content || "";
+}
+
+// Unified AI entry point: try OpenAI first, then fall back to the local LLM.
+// Returns null only if every provider fails, so callers can use their own heuristic fallback.
+async function callOpenAI(systemPrompt, userPrompt, maxOutputTokens = 800) {
+  if (process.env.OPENAI_API_KEY) {
+    try {
+      const remote = await callOpenAIRemote(systemPrompt, userPrompt, maxOutputTokens);
+      if (remote) {
+        return remote;
+      }
+      console.warn("OpenAI returned an empty response; falling back to local LLM.");
+    } catch (e) {
+      console.warn(`OpenAI call failed (${e.message}); falling back to local LLM.`);
+    }
+  }
+
+  try {
+    return await callLocalLLM(systemPrompt, userPrompt, maxOutputTokens);
+  } catch (e) {
+    console.error(`Local LLM call failed: ${e.message}`);
+    return null;
+  }
 }
 
 app.get("/api/rubric", async (_req, res) => {
