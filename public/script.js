@@ -369,13 +369,15 @@ function appendSyllabusAssignments(data) {
       ? `I pulled ${assignments.length} likely assignment${assignments.length > 1 ? 's' : ''} from your syllabus (rough match — the AI model wasn't available for a cleaner read):`
       : `I found ${assignments.length} assignment${assignments.length > 1 ? 's' : ''} in your syllabus:`;
     appendAgentMessage(prefix);
-    const ul = document.createElement('ul');
-    assignments.forEach((a) => {
+    const ol = document.createElement('ol');
+    assignments.forEach((a, i) => {
       const li = document.createElement('li');
-      li.textContent = a.description ? `${a.name} — ${a.description}` : a.name;
-      ul.appendChild(li);
+      const label = a.description ? `${a.name} — ${a.description}` : a.name;
+      li.textContent = `${i + 1}. ${label}`;
+      ol.appendChild(li);
     });
-    agentMessages.appendChild(ul);
+    agentMessages.appendChild(ol);
+    appendAgentMessage('Type the number of the assignment you want to enhance, or describe your own.');
     agentChat.scrollTop = agentChat.scrollHeight;
     return true;
   }
@@ -609,13 +611,29 @@ agentInputForm?.addEventListener('submit', async (e) => {
   // Text answers for subsequent questions
   const text = agentTextInput.value.trim();
   if (!text) return;
-  appendUserMessage(text);
-  agentAnswers.push({ question: agentQuestions[currentQuestionIndex], answer: text });
+
+  // At the assignments question, let the user pick a listed assignment by number.
+  let answerText = text;
+  let pickedFromList = false;
+  if (currentQuestionIndex === 1 && detectedAssignments.length) {
+    const pick = Number(text);
+    if (Number.isInteger(pick) && pick >= 1 && pick <= detectedAssignments.length) {
+      const a = detectedAssignments[pick - 1];
+      answerText = a.description ? `${a.name} — ${a.description}` : a.name;
+      pickedFromList = true;
+    }
+  }
+
+  appendUserMessage(pickedFromList ? answerText : text);
+  agentAnswers.push({ question: agentQuestions[currentQuestionIndex], answer: answerText });
   agentTextInput.value = '';
 
   // After answering the 'assignments' question (now index 1), offer improvements
   if (currentQuestionIndex === 1) {
-    const improvements = generateImprovements(text);
+    if (pickedFromList) {
+      appendAgentMessage(`Great — focusing on: ${answerText}`);
+    }
+    const improvements = generateImprovements(answerText);
     appendAgentMessage('Here are 10 possible ways to improve that assignment:');
     const ul = document.createElement('ul');
     improvements.forEach((it) => {
