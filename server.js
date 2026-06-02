@@ -1415,6 +1415,55 @@ In 3-5 sentences, explain how you would actually put this in place for this assi
   }
 });
 
+app.post("/api/populate-proposal", async (req, res) => {
+  try {
+    const answers = req.body?.answers;
+    const idea = safe(req.body?.idea);
+    const history = sanitizeHistory(req.body?.history);
+    const answersText = answersToText(answers);
+
+    const systemPrompt =
+      "You help a UVU faculty member fill out a teaching-with-AI grant proposal form by summarizing your whole conversation with them. Address them as \"you\". Use the conversation, their answers, and the idea they chose. If a field is genuinely unknown, infer a reasonable value from context. Return STRICT JSON only — no prose or markdown.";
+    const userPrompt = `Conversation answers:
+${answersText || "(none)"}
+${idea ? `\nThe idea you decided to pursue: ${idea}\n` : ""}
+Using everything discussed, fill out the proposal fields. Return JSON with exactly this schema:
+{
+  "box1": "the course this is for",
+  "box2": "the specific assignment or assessment to be affected",
+  "box3": "what you want to build — the concrete AI enhancement (1-3 sentences)",
+  "box4": "how your idea improves student learning",
+  "box5": "how much money is needed (a dollar amount up to $5,000)",
+  "box6": "the software or tools you need"
+}`;
+
+    let aiText = "";
+    try {
+      aiText = (await callOpenAI(systemPrompt, userPrompt, 800, history)) || "";
+    } catch (e) {
+      console.error("populate-proposal AI error:", e.message);
+    }
+    const aiResponded = Boolean(aiText && aiText.trim());
+
+    const parsed =
+      parseJsonSafely(aiText) || parseJsonSafely(extractFirstJsonBlock(aiText)) || {};
+    const fields = {
+      box1: safe(parsed.box1),
+      box2: safe(parsed.box2),
+      box3: safe(parsed.box3),
+      box4: safe(parsed.box4),
+      box5: safe(parsed.box5),
+      box6: safe(parsed.box6)
+    };
+
+    console.log(`[populate-proposal] aiResponded=${aiResponded} filled=${Object.values(fields).filter(Boolean).length}/6`);
+    return res.json({ fields, aiResponded });
+  } catch (error) {
+    console.error("populate-proposal error:", error.message);
+    return res.status(500).json({ error: "Unable to populate proposal", detail: error.message });
+  }
+});
+
 app.get("*", (_req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });

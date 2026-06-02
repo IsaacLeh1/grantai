@@ -961,7 +961,9 @@ agentSatisfiedBtn?.addEventListener('click', () => {
       });
       if (!data) return 'No response.';
       const raw = Array.isArray(data.content) ? data.content.join(' ') : (data.content || '');
-      return raw.trim() || 'No response.';
+      const out = raw.trim() || 'No response.';
+      conversationLog.push({ role: 'assistant', content: out });
+      return out;
     } catch (err) {
       // Do not expose raw error text to the chat; provide a concise fallback
       return 'Showing offline suggestions.';
@@ -969,6 +971,7 @@ agentSatisfiedBtn?.addEventListener('click', () => {
   }
 
   function appendIdeasUserMessage(text) {
+    conversationLog.push({ role: 'user', content: String(text) });
     const last = ideasMessages.lastElementChild;
     if (last && last.classList && last.classList.contains('bot')) {
       const span = document.createElement('span');
@@ -1026,6 +1029,8 @@ agentSatisfiedBtn?.addEventListener('click', () => {
         const fallback = generateGrantIdeas();
         fallback.forEach((it) => ideasArr.push(it));
       }
+
+      conversationLog.push({ role: 'assistant', content: 'Grant ideas offered: ' + ideasArr.join('; ') });
 
       const summary = document.createElement('div');
       summary.className = 'agent-msg bot';
@@ -1185,9 +1190,8 @@ function generateGrantIdeas() {
 // start agent on DOM ready
 document.addEventListener('DOMContentLoaded', () => startAgent());
 
-function populateExecuteFromAnswers() {
-  if (!executeForm) return;
-  // Map answers to execute form boxes
+// Build the keyword-based fallback field values from the fixed Q&A.
+function keywordFallbackFields() {
   const answerMap = {};
   agentAnswers.forEach(a => {
     const q = a.question || '';
@@ -1201,23 +1205,48 @@ function populateExecuteFromAnswers() {
     if (q.includes('software') && !answerMap.box6) answerMap.box6 = ans;
     if (q.includes('budget') && !answerMap.box5) answerMap.box5 = ans;
     if (q.includes('population') && !answerMap.box1) answerMap.box1 = (answerMap.box1 ? answerMap.box1 + ' | ' : '') + ans;
-    if (q.includes('semester') && !answerMap.timeline) answerMap.timeline = ans;
   });
-
-  // Fallbacks: use combined answers to populate box3 (what you want to build)
   const course = answerMap.box1 || (agentAnswers[1] && agentAnswers[1].answer) || '';
   const assignment = answerMap.box2 || (agentAnswers[2] && agentAnswers[2].answer) || '';
   const outcomes = answerMap.box4 || (agentAnswers[3] && agentAnswers[3].answer) || '';
+  return {
+    box1: course,
+    box2: assignment,
+    box3: (assignment || course || selectedIdeaText) ? `${selectedIdeaText || 'AI enhancement'} for ${assignment || 'the assignment'} in ${course || 'the course'}`.trim() : '',
+    box4: outcomes,
+    box5: answerMap.box5 || '',
+    box6: answerMap.box6 || ''
+  };
+}
 
-  if (course) executeForm.elements['box1'].value = course;
-  if (assignment) executeForm.elements['box2'].value = assignment;
-  const builtIdea = `AI enhancement to ${assignment} in ${course} to improve: ${outcomes}`;
-  executeForm.elements['box3'].value = builtIdea;
-  if (outcomes) executeForm.elements['box4'].value = outcomes;
-  if (answerMap.box5) executeForm.elements['box5'].value = answerMap.box5;
-  if (answerMap.box6) executeForm.elements['box6'].value = answerMap.box6;
+async function populateExecuteFromAnswers() {
+  if (!executeForm) return;
+  const fallback = keywordFallbackFields();
 
-  appendAgentMessage('Section 3 populated with answers. Review and edit boxes as needed.');
+  appendAgentMessage('Summarizing your conversation to fill Section 3…');
+
+  let fields = {};
+  try {
+    const data = await fetchJSON('/api/populate-proposal', {
+      method: 'POST',
+      body: JSON.stringify({
+        answers: agentAnswers,
+        idea: selectedIdeaText,
+        history: conversationLog.slice(-24)
+      })
+    });
+    fields = data.fields || {};
+  } catch (err) {
+    console.error('populate-proposal failed:', err);
+  }
+
+  // Prefer the AI summary per field, fall back to keyword mapping.
+  ['box1', 'box2', 'box3', 'box4', 'box5', 'box6'].forEach((k) => {
+    const val = (fields[k] && String(fields[k]).trim()) || fallback[k] || '';
+    if (val && executeForm.elements[k]) executeForm.elements[k].value = val;
+  });
+
+  appendAgentMessage('Section 3 has been filled from your conversation. Review and edit the boxes as needed.');
 }
 
 // ========== AUTOFILL FUNCTIONALITY FOR DEMO ==========
