@@ -1151,6 +1151,53 @@ Return JSON with exactly this schema:
   }
 });
 
+app.post("/api/ask", async (req, res) => {
+  try {
+    const question = safe(req.body?.question);
+    if (!question) {
+      return res.status(400).json({ error: "Missing question" });
+    }
+
+    const context = req.body?.context || {};
+    const course = safe(context.course);
+    const assignment = safe(context.assignment);
+    const answers = Array.isArray(context.answers) ? context.answers : [];
+
+    const contextLines = [];
+    if (course) contextLines.push(`Course: ${course}`);
+    if (assignment) contextLines.push(`Focused assignment: ${assignment}`);
+    if (answers.length) {
+      contextLines.push("Faculty answers so far:");
+      answers.forEach((a) => {
+        if (a && (a.q || a.a)) contextLines.push(`- ${safe(a.q)}: ${safe(a.a)}`);
+      });
+    }
+
+    const systemPrompt =
+      "You are a helpful assistant for UVU faculty writing teaching-with-AI grant proposals. Answer the question clearly and concisely in plain language (a short paragraph). If it relates to their proposal, be specific to the context given.";
+    const userPrompt = `${contextLines.length ? contextLines.join("\n") + "\n\n" : ""}Question: ${question}`;
+
+    let answer = "";
+    try {
+      answer = (await callOpenAI(systemPrompt, userPrompt, 500)) || "";
+    } catch (e) {
+      console.error("ask AI error:", e.message);
+    }
+    const aiResponded = Boolean(answer && answer.trim());
+
+    if (!aiResponded) {
+      answer =
+        "I can't reach the AI model right now. Make sure Ollama is running (`ollama serve`) and the model is pulled, or set a valid OPENAI_API_KEY, then ask again.";
+    }
+
+    console.log(`[ask] q="${question.slice(0, 60)}" aiResponded=${aiResponded}`);
+    return res.json({ answer: answer.trim(), aiResponded });
+  } catch (error) {
+    console.error("ask error:", error.message);
+    return res.status(500).json({ error: "Unable to answer question", detail: error.message });
+  }
+});
+
 app.get("*", (_req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
