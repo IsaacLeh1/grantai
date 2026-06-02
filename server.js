@@ -510,7 +510,7 @@ async function gradeProposalAgainstRubric({ proposalText, rubric, facultySubmiss
 }
 
 // Calls OpenAI's Responses API. Throws on any failure so the caller can fall back.
-async function callOpenAIRemote(systemPrompt, userPrompt, maxOutputTokens = 800) {
+async function callOpenAIRemote(systemPrompt, userPrompt, maxOutputTokens = 800, history = []) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     throw new Error("OPENAI_API_KEY is not configured");
@@ -532,6 +532,10 @@ async function callOpenAIRemote(systemPrompt, userPrompt, maxOutputTokens = 800)
           role: "system",
           content: [{ type: "input_text", text: systemPrompt }]
         },
+        ...history.map((item) => ({
+          role: item.role === 'assistant' ? 'assistant' : 'user',
+          content: [{ type: item.role === 'assistant' ? 'output_text' : 'input_text', text: String(item.content) }]
+        })),
         {
           role: "user",
           content: [{ type: "input_text", text: userPrompt }]
@@ -552,7 +556,7 @@ async function callOpenAIRemote(systemPrompt, userPrompt, maxOutputTokens = 800)
 // Calls an OpenAI-compatible /chat/completions endpoint. Defaults to a local
 // Ollama server, but with LOCAL_LLM_API_KEY set it also works with hosted
 // providers like Groq or OpenRouter (needed when the site runs in the cloud).
-async function callLocalLLM(systemPrompt, userPrompt, maxOutputTokens = 800) {
+async function callLocalLLM(systemPrompt, userPrompt, maxOutputTokens = 800, history = []) {
   // Trim env values — pasted dashboard vars often carry a stray trailing newline/space.
   const baseUrl = (safe(process.env.LOCAL_LLM_BASE_URL) || "http://localhost:11434/v1").replace(/\/+$/, "");
   const model = safe(process.env.LOCAL_LLM_MODEL) || "llama3";
@@ -578,6 +582,7 @@ async function callLocalLLM(systemPrompt, userPrompt, maxOutputTokens = 800) {
         max_tokens: maxOutputTokens,
         messages: [
           { role: "system", content: systemPrompt },
+          ...history.map((h) => ({ role: h.role === 'assistant' ? 'assistant' : 'user', content: String(h.content) })),
           { role: "user", content: userPrompt }
         ]
       }),
@@ -598,10 +603,10 @@ async function callLocalLLM(systemPrompt, userPrompt, maxOutputTokens = 800) {
 
 // Unified AI entry point: try OpenAI first, then fall back to the local LLM.
 // Returns null only if every provider fails, so callers can use their own heuristic fallback.
-async function callOpenAI(systemPrompt, userPrompt, maxOutputTokens = 800) {
+async function callOpenAI(systemPrompt, userPrompt, maxOutputTokens = 800, history = []) {
   if (process.env.OPENAI_API_KEY) {
     try {
-      const remote = await callOpenAIRemote(systemPrompt, userPrompt, maxOutputTokens);
+      const remote = await callOpenAIRemote(systemPrompt, userPrompt, maxOutputTokens, history);
       if (remote) {
         return remote;
       }
@@ -612,7 +617,7 @@ async function callOpenAI(systemPrompt, userPrompt, maxOutputTokens = 800) {
   }
 
   try {
-    return await callLocalLLM(systemPrompt, userPrompt, maxOutputTokens);
+    return await callLocalLLM(systemPrompt, userPrompt, maxOutputTokens, history);
   } catch (e) {
     console.error(`Local LLM call failed: ${e.message}`);
     return null;
@@ -1160,6 +1165,14 @@ Return JSON with exactly this schema:
   }
 });
 
+function sanitizeHistory(history) {
+  if (!Array.isArray(history)) return [];
+  return history
+    .filter((m) => m && m.content)
+    .slice(-12)
+    .map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: String(m.content).slice(0, 2000) }));
+}
+
 // Turn the collected agent Q&A into a readable context block for prompts.
 function answersToText(answers) {
   if (!Array.isArray(answers)) return "";
@@ -1325,6 +1338,7 @@ app.post("/api/ask", async (req, res) => {
     const course = safe(context.course);
     const assignment = safe(context.assignment);
     const answers = Array.isArray(context.answers) ? context.answers : [];
+    const history = sanitizeHistory(req.body?.history);
 
     const contextLines = [];
     if (course) contextLines.push(`Course: ${course}`);
@@ -1342,7 +1356,7 @@ app.post("/api/ask", async (req, res) => {
 
     let answer = "";
     try {
-      answer = (await callOpenAI(systemPrompt, userPrompt, 500)) || "";
+      answer = (await callOpenAI(systemPrompt, userPrompt, 500, history)) || "";
     } catch (e) {
       console.error("ask AI error:", e.message);
     }
@@ -1369,6 +1383,7 @@ app.post("/api/idea-detail", async (req, res) => {
     if (!idea) {
       return res.status(400).json({ error: "Missing idea" });
     }
+    const history = sanitizeHistory(req.body?.history);
 
     const systemPrompt =
       "You help a faculty member implement a specific AI enhancement for one of their assignments. Address them directly as \"you\" (e.g., \"you could…\", \"you would set up…\") — never \"the instructor\" or \"the faculty\". Be concrete, practical, and specific. Write plain prose — no headings or bullet lists.";
@@ -1381,7 +1396,7 @@ In 3-5 sentences, explain how you would actually put this in place for this assi
 
     let content = "";
     try {
-      content = (await callOpenAI(systemPrompt, userPrompt, 500)) || "";
+      content = (await callOpenAI(systemPrompt, userPrompt, 500, history)) || "";
     } catch (e) {
       console.error("idea-detail AI error:", e.message);
     }

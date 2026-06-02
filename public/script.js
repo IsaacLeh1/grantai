@@ -355,6 +355,7 @@ let detectedAssignments = [];
 let detectedCourse = '';
 let lastImprovements = [];
 let agentDone = false;
+let conversationLog = [];
 let proposalOptionLabels = [];
 let selectedIdeaText = '';
 
@@ -371,7 +372,7 @@ async function askClarification(question) {
     const res = await fetch('/api/ask', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question, context })
+      body: JSON.stringify({ question, context, history: conversationLog.slice(-12) })
     });
     const data = await res.json().catch(() => ({}));
     if (res.ok && data.answer) {
@@ -503,11 +504,13 @@ function appendAgentMessage(text) {
   div.className = 'agent-msg bot';
   // Create bot message container. Keep content as HTML if markdown is available.
   div.innerHTML = text;
+  conversationLog.push({ role: 'assistant', content: div.textContent || String(text) });
   agentMessages.appendChild(div);
   agentChat.scrollTop = agentChat.scrollHeight;
 }
 
 function appendUserMessage(text) {
+  conversationLog.push({ role: 'user', content: String(text) });
   // If last message is a bot message in the agent chat, append the user's
   // reply inline inside that bot message so they appear on the same line.
   try {
@@ -540,6 +543,7 @@ function startAgent() {
   detectedAssignments = [];
   detectedCourse = '';
   lastImprovements = [];
+  conversationLog = [];
   // Intro message: require syllabus
   showQuestion(currentQuestionIndex);
 }
@@ -609,7 +613,7 @@ agentInputForm?.addEventListener('submit', async (e) => {
         try {
           const data = await fetchJSON('/api/idea-detail', {
             method: 'POST',
-            body: JSON.stringify({ idea: ideaText, assignment: focus, course: detectedCourse })
+            body: JSON.stringify({ idea: ideaText, assignment: focus, course: detectedCourse, history: conversationLog.slice(-12) })
           });
           appendAgentMessage(data.content || 'No additional detail available.');
         } catch (err) {
