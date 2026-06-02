@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import fetch from "node-fetch";
+import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
 import { readFile, writeFile } from "fs/promises";
@@ -69,6 +70,18 @@ function parseJsonSafely(text) {
   } catch {
     return null;
   }
+}
+
+// Local models often wrap JSON in ```json fences or add stray prose.
+// Pull out the first {...} block so parseJsonSafely has a clean target.
+function extractFirstJsonBlock(text) {
+  if (!text) return "";
+  const fenced = String(text).match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const body = fenced ? fenced[1] : String(text);
+  const start = body.indexOf("{");
+  const end = body.lastIndexOf("}");
+  if (start === -1 || end === -1 || end < start) return "";
+  return body.slice(start, end + 1);
 }
 
 function toNumber(value, fallback = 0) {
@@ -858,6 +871,101 @@ app.post("/api/reviews", async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({ error: "Unable to save review", detail: error.message });
+  }
+});
+
+const syllabusUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 } // 10 MB
+});
+
+// Extract raw text from an uploaded PDF or Word (.docx) file.
+async function extractSyllabusText(file) {
+  const name = (file.originalname || "").toLowerCase();
+  const mime = file.mimetype || "";
+
+  if (mime.includes("pdf") || name.endsWith(".pdf")) {
+    const { PDFParse } = await import("pdf-parse");
+    const parser = new PDFParse({ data: file.buffer });
+    const data = await parser.getText();
+    return data?.text || "";
+  }
+
+  if (name.endsWith(".docx") || mime.includes("officedocument.wordprocessingml")) {
+    const { default: mammoth } = await import("mammoth");
+    const result = await mammoth.extractRawText({ buffer: file.buffer });
+    return result.value || "";
+  }
+
+  throw new Error("Unsupported file type. Please upload a PDF or Word (.docx) file.");
+}
+
+app.post("/api/upload-syllabus", syllabusUpload.single("syllabus"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    let text = "";
+    try {
+      text = await extractSyllabusText(req.file);
+    } catch (e) {
+      return res.status(415).json({ error: e.message, filename: req.file.originalname });
+    }
+
+    text = text.replace(/\r/g, "").replace(/[ \t]+\n/g, "\n").trim();
+    if (!text) {
+      return res.status(422).json({
+        error: "Could not extract any text from that file. It may be a scanned image (try a text-based PDF or .docx).",
+        filename: req.file.originalname
+      });
+    }
+
+    // Keep the prompt manageable for local models.
+    const maxChars = 12000;
+    const snippet = text.length > maxChars ? text.slice(0, maxChars) : text;
+
+    const systemPrompt =
+      "You read a course syllabus and extract its graded assignments and assessments. Return STRICT JSON only — no prose, no markdown.";
+    const userPrompt = `From the syllabus text below, extract a short course summary and the list of graded assignments or assessments.
+
+Return JSON with exactly this schema:
+{
+  "course": "course name/number if found, else empty string",
+  "summary": "one or two sentence summary of the course",
+  "assignments": [{ "name": "string", "description": "short description if available, else empty string" }]
+}
+
+Syllabus text:
+${snippet}`;
+
+    let aiText = "";
+    try {
+      aiText = (await callOpenAI(systemPrompt, userPrompt, 900)) || "";
+    } catch (e) {
+      console.error("Syllabus parse AI error:", e.message);
+    }
+
+    const parsed =
+      parseJsonSafely(aiText) || parseJsonSafely(extractFirstJsonBlock(aiText)) || null;
+    const assignments = Array.isArray(parsed?.assignments)
+      ? parsed.assignments.filter((a) => a && a.name).map((a) => ({
+          name: String(a.name).trim(),
+          description: a.description ? String(a.description).trim() : ""
+        }))
+      : [];
+
+    return res.json({
+      filename: req.file.originalname,
+      course: parsed?.course || "",
+      summary: parsed?.summary || "",
+      assignments,
+      charCount: text.length,
+      source: assignments.length ? "ai" : "none"
+    });
+  } catch (error) {
+    console.error("upload-syllabus error:", error.message);
+    return res.status(500).json({ error: "Failed to process syllabus", detail: error.message });
   }
 });
 
