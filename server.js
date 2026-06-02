@@ -932,6 +932,43 @@ function heuristicAssignments(text) {
   return found;
 }
 
+// Coerce the model's "ideas" output into a clean {title, description} list,
+// tolerating string arrays, alternate keys, and top-level arrays.
+function normalizeIdeas(parsed) {
+  if (!parsed) return [];
+  let list = Array.isArray(parsed)
+    ? parsed
+    : parsed.ideas || parsed.possibilities || parsed.suggestions || parsed.items || null;
+  if (!Array.isArray(list)) return [];
+
+  return list
+    .map((it) => {
+      if (typeof it === "string") {
+        return { title: "", description: it.trim() };
+      }
+      if (it && typeof it === "object") {
+        const title = it.title || it.name || it.idea || "";
+        const description = it.description || it.detail || it.details || it.text || it.how || "";
+        return { title: String(title).trim(), description: String(description || "").trim() };
+      }
+      return null;
+    })
+    .filter((it) => it && (it.title || it.description));
+}
+
+// Offline fallback ideas, used only when the AI is unreachable.
+function fallbackAssignmentIdeas(assignment) {
+  const base = assignment || "the assignment";
+  return [
+    { title: "Formative AI feedback", description: `Give students AI-driven feedback while drafting ${base}, flagging gaps before submission.` },
+    { title: "Rubric-aligned auto-scoring", description: `Use AI to pre-score ${base} against the rubric so instructors review and adjust faster.` },
+    { title: "AI-moderated peer review", description: `Scale peer review on ${base} with AI that guides comments and checks for constructiveness.` },
+    { title: "Scaffolded prompts & exemplars", description: `Embed AI-generated prompts and worked examples inside ${base} to support struggling students.` },
+    { title: "Reflection & ePortfolio", description: `Capture AI-summarized student reflections tied to ${base} for longitudinal assessment.` },
+    { title: "Adaptive next steps", description: `Have AI recommend the next task or resource based on each student's work on ${base}.` }
+  ];
+}
+
 const syllabusUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 } // 10 MB
@@ -1045,6 +1082,54 @@ ${snippet}`;
   } catch (error) {
     console.error("upload-syllabus error:", error.message);
     return res.status(500).json({ error: "Failed to process syllabus", detail: error.message });
+  }
+});
+
+app.post("/api/assignment-ideas", async (req, res) => {
+  try {
+    const assignment = safe(req.body?.assignment);
+    const course = safe(req.body?.course);
+    if (!assignment) {
+      return res.status(400).json({ error: "Missing assignment" });
+    }
+
+    const systemPrompt =
+      "You help university faculty enhance a specific course assignment with AI. Be concrete, practical, and specific to the assignment given — avoid generic advice. Return STRICT JSON only, no prose or markdown.";
+    const userPrompt = `Assignment: ${assignment}
+${course ? `Course: ${course}\n` : ""}
+Propose up to 8 concrete ways the instructor could use AI to enhance THIS specific assignment. Each idea must be actionable and tied to the assignment.
+
+Return JSON with exactly this schema:
+{
+  "ideas": [{ "title": "short title", "description": "one or two sentence concrete implementation" }]
+}`;
+
+    let aiText = "";
+    try {
+      aiText = (await callOpenAI(systemPrompt, userPrompt, 900)) || "";
+    } catch (e) {
+      console.error("assignment-ideas AI error:", e.message);
+    }
+    const aiResponded = Boolean(aiText && aiText.trim());
+
+    const parsed =
+      parseJsonSafely(aiText) || parseJsonSafely(extractFirstJsonBlock(aiText)) || null;
+    let ideas = normalizeIdeas(parsed);
+    let source = ideas.length ? "ai" : "none";
+
+    if (!ideas.length) {
+      ideas = fallbackAssignmentIdeas(assignment);
+      source = aiResponded ? "fallback" : "offline";
+    }
+
+    console.log(
+      `[assignment-ideas] assignment="${assignment.slice(0, 60)}" aiResponded=${aiResponded} ideas=${ideas.length} source=${source}`
+    );
+
+    return res.json({ ideas, aiResponded, source });
+  } catch (error) {
+    console.error("assignment-ideas error:", error.message);
+    return res.status(500).json({ error: "Unable to generate ideas", detail: error.message });
   }
 });
 

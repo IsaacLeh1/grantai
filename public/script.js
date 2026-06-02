@@ -352,6 +352,8 @@ let agentAnswers = [];
 let currentQuestionIndex = 0;
 let awaitingImprovementsFollowup = false;
 let detectedAssignments = [];
+let detectedCourse = '';
+let lastImprovements = [];
 
 // Render the assignments the server extracted from the uploaded syllabus.
 // Returns true if at least one assignment was found.
@@ -362,6 +364,8 @@ function appendSyllabusAssignments(data) {
   if (data.summary) {
     appendAgentMessage(`I read your syllabus${data.course ? ` for ${data.course}` : ''}. ${data.summary}`);
   }
+
+  if (data.course) detectedCourse = data.course;
 
   if (assignments.length) {
     detectedAssignments = assignments;
@@ -549,8 +553,10 @@ agentInputForm?.addEventListener('submit', async (e) => {
     if (picks.length) {
       picks.slice(0, 4).forEach((p) => {
         const idx = Math.max(0, p - 1);
-        const improvements = generateImprovements('');
-        const detail = improvements[idx] || `No detail available for option ${p}.`;
+        const item = lastImprovements[idx];
+        const detail = item
+          ? (item.title ? `${item.title} — ${item.description}` : item.description)
+          : `No detail available for option ${p}.`;
         appendAgentMessage(`Detail for option ${p}: ${detail}`);
       });
       appendAgentMessage('Would you like more details on another option, or shall we continue? (say a number or "no")');
@@ -632,15 +638,40 @@ agentInputForm?.addEventListener('submit', async (e) => {
     if (pickedFromList) {
       appendAgentMessage(`Great — focusing on: ${answerText}`);
     }
-    const improvements = generateImprovements(answerText);
-    appendAgentMessage('Here are 10 possible ways to improve that assignment:');
-    const ul = document.createElement('ul');
-    improvements.forEach((it) => {
+    appendAgentMessage('Thinking about AI implementation possibilities for that assignment…');
+
+    let ideas = [];
+    try {
+      const res = await fetch('/api/assignment-ideas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assignment: answerText, course: detectedCourse })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && Array.isArray(data.ideas)) {
+        ideas = data.ideas;
+        if (data.aiResponded === false) {
+          appendAgentMessage("(The AI model wasn't available, so these are general suggestions. Start Ollama for ideas tailored to this assignment.)");
+        }
+      }
+    } catch (err) {
+      console.error('assignment-ideas fetch failed:', err);
+    }
+
+    // Client-side last resort if the request failed entirely.
+    if (!ideas.length) {
+      ideas = generateImprovements(answerText).map((s) => ({ title: '', description: s.replace(/^\d+\.\s*/, '') }));
+    }
+
+    lastImprovements = ideas;
+    appendAgentMessage(`Here are ${ideas.length} possible ways to enhance that assignment with AI:`);
+    const ol = document.createElement('ol');
+    ideas.forEach((it) => {
       const li = document.createElement('li');
-      li.textContent = it;
-      ul.appendChild(li);
+      li.textContent = it.title ? `${it.title} — ${it.description}` : it.description;
+      ol.appendChild(li);
     });
-    agentMessages.appendChild(ul);
+    agentMessages.appendChild(ol);
     appendAgentMessage('Would you like to learn more about any of these? If so, name the number or say "no".');
     agentChat.scrollTop = agentChat.scrollHeight;
     // Instead of auto-advancing, wait for the user's follow-up (number or 'no')
