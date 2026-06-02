@@ -716,6 +716,40 @@ app.post("/api/explore", async (req, res) => {
   }
 });
 
+// Check which graded rubric criteria the submission does not yet address, so the
+// user can be asked to fill them in. Returns [{id, name, question}].
+async function findMissingRubricAspects(submission, rubric) {
+  const criteriaList = (rubric.criteria || [])
+    .map((c) => `- ${c.id}: ${c.name}${c.description ? ` — ${c.description}` : ""}`)
+    .join("\n");
+
+  const systemPrompt =
+    "You check whether a grant proposal submission contains the information needed to be graded on each rubric criterion. Address the applicant as \"you\". Return STRICT JSON only, no prose.";
+  const userPrompt = `Every rubric criterion below is graded. For each criterion whose required information is MISSING or not clearly addressed in the submission, add an entry asking you to provide it. Be strict — if a criterion has no supporting detail, it is missing.
+
+Rubric criteria:
+${criteriaList}
+
+Submission:
+${JSON.stringify(submission, null, 2)}
+
+Return JSON with exactly this schema:
+{ "missing": [ { "id": "criterion id", "name": "criterion name", "question": "a direct question asking you to provide the missing info" } ] }
+If everything is covered, return { "missing": [] }.`;
+
+  let aiText = "";
+  try {
+    aiText = (await callOpenAI(systemPrompt, userPrompt, 600)) || "";
+  } catch (e) {
+    console.error("missing-aspects AI error:", e.message);
+  }
+  const parsed = parseJsonSafely(aiText) || parseJsonSafely(extractFirstJsonBlock(aiText)) || {};
+  const list = Array.isArray(parsed.missing) ? parsed.missing : [];
+  return list
+    .filter((m) => m && m.question)
+    .map((m) => ({ id: safe(m.id), name: safe(m.name), question: safe(m.question) }));
+}
+
 app.post("/api/execute", async (req, res) => {
   try {
     const rubric = await loadRubric();
@@ -728,6 +762,11 @@ app.post("/api/execute", async (req, res) => {
       box5_money: safe(body.box5),
       box6_software: safe(body.box6)
     };
+    // Extra info the user typed in response to "missing graded aspects" prompts.
+    const extra = safe(body.extra);
+    if (extra) {
+      payload.additional_info = extra;
+    }
     // Preserve autofillVariant if provided by the client so heuristic can detect demo variant
     if (body.autofillVariant) {
       payload.autofillVariant = safe(body.autofillVariant);
@@ -805,11 +844,19 @@ This project modernizes ${payload.box2_assignment || "a core assignment"} in ${p
       // non-fatal
       console.error("Failed to append grade note to pitch:", e.message);
     }
+    let missing = [];
+    try {
+      missing = await findMissingRubricAspects(payload, rubric);
+    } catch (e) {
+      console.error("Missing-aspects step failed:", e.message);
+    }
+
     return res.json({
       content: text,
       grading: gradingResponse.grading,
       gradingReport: gradingResponse.report,
-      gradingSource: gradingResponse.source
+      gradingSource: gradingResponse.source,
+      missing
     });
   } catch (error) {
     return res.status(500).json({ error: "Unable to draft proposal", detail: error.message });

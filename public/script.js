@@ -21,6 +21,7 @@ const chatInput = document.getElementById("chat-input");
 
 let softwareCache = [];
 let currentExecuteAutofill = null;
+let executeExtraInfo = '';
 
 if (navWrap) {
   let lastScrollY = window.scrollY;
@@ -238,18 +239,73 @@ if (exploreForm) {
   });
 }
 
-executeForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const formData = new FormData(executeForm);
+// Render the "graded aspects still missing" panel with inputs to fill them in.
+function renderMissingAspects(missing) {
+  const existing = document.getElementById("execute-missing");
+  if (existing) existing.remove();
+  if (!missing || !missing.length) return;
+
+  const wrap = document.createElement("div");
+  wrap.id = "execute-missing";
+  wrap.style.cssText = "margin-top:1rem;padding:1rem;border:1px solid #d9a441;border-radius:8px;background:rgba(217,164,65,0.08);";
+
+  const h = document.createElement("h3");
+  h.textContent = "Some graded aspects are still missing";
+  h.style.marginTop = "0";
+  wrap.appendChild(h);
+
+  const p = document.createElement("p");
+  p.textContent = "Your proposal is graded on these. Fill in the missing details below and re-draft so they can be scored:";
+  wrap.appendChild(p);
+
+  missing.forEach((m, i) => {
+    const label = document.createElement("label");
+    label.style.cssText = "display:block;margin:0.6rem 0;font-weight:600;";
+    label.textContent = m.question || m.name || `Missing item ${i + 1}`;
+    const input = document.createElement("textarea");
+    input.rows = 2;
+    input.style.cssText = "display:block;width:100%;margin-top:0.3rem;font-weight:400;";
+    input.dataset.missingId = m.id || `m${i}`;
+    input.dataset.missingName = m.name || "";
+    label.appendChild(input);
+    wrap.appendChild(label);
+  });
+
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "primary";
+  btn.textContent = "Add details & re-draft";
+  btn.addEventListener("click", () => {
+    const additions = [];
+    wrap.querySelectorAll("textarea[data-missing-id]").forEach((inp) => {
+      const val = inp.value.trim();
+      if (val) additions.push(`${inp.dataset.missingName || inp.dataset.missingId}: ${val}`);
+    });
+    if (additions.length) {
+      executeExtraInfo = (executeExtraInfo ? executeExtraInfo + "\n" : "") + additions.join("\n");
+    }
+    runExecuteDraft();
+  });
+  wrap.appendChild(btn);
+
+  executeGradeOutput.insertAdjacentElement("afterend", wrap);
+}
+
+async function runExecuteDraft() {
+  const oldMissing = document.getElementById("execute-missing");
+  if (oldMissing) oldMissing.remove();
 
   setPanelVisible(executeOutput, true);
   setPanelVisible(executeGradeOutput, true);
   executeOutput.textContent = "Drafting proposal...";
   executeGradeOutput.textContent = "Grading proposal against rubric...";
   try {
-    const payload = Object.fromEntries(formData.entries());
+    const payload = Object.fromEntries(new FormData(executeForm).entries());
     if (currentExecuteAutofill) {
       payload.autofillVariant = currentExecuteAutofill;
+    }
+    if (executeExtraInfo) {
+      payload.extra = executeExtraInfo;
     }
     const result = await fetchJSON("/api/execute", {
       method: "POST",
@@ -258,11 +314,17 @@ executeForm.addEventListener("submit", async (e) => {
     renderMarkdown(executeOutput, result.content);
     const variantLabel = currentExecuteAutofill ? `**Variant:** ${currentExecuteAutofill}\n\n` : "";
     renderMarkdown(executeGradeOutput, (variantLabel || "") + (result.gradingReport || "## Rubric Grade\n- No grade returned."));
+    renderMissingAspects(result.missing || []);
   } catch (err) {
     executeOutput.textContent = `Unable to draft proposal: ${err.message}`;
     setPanelVisible(executeGradeOutput, false);
     executeGradeOutput.textContent = "";
   }
+}
+
+executeForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  runExecuteDraft();
 });
 
 openSoftwareChatBtn.addEventListener("click", () => {
@@ -1319,6 +1381,9 @@ document.getElementById("autofill-execute-3")?.addEventListener("click", () => {
 
 document.getElementById("clear-execute")?.addEventListener("click", () => {
   executeForm.reset();
+  executeExtraInfo = '';
+  const missingPanel = document.getElementById("execute-missing");
+  if (missingPanel) missingPanel.remove();
   setPanelVisible(executeOutput, false);
   setPanelVisible(executeGradeOutput, false);
   executeOutput.textContent = "";
