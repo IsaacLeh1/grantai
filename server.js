@@ -1261,7 +1261,7 @@ app.post("/api/ai-reply", async (req, res) => {
     const context = answersToText(req.body?.answers);
 
     const systemPrompt =
-      "You are a concise grant-writing assistant for a UVU faculty member. Address them directly as \"you\" — never \"the instructor\" or \"the faculty\". Answer in plain language, at most a few sentences.";
+      "You are a concise grant-writing assistant for a UVU faculty member. Address them directly as \"you\" — never \"the instructor\" or \"the faculty\". Answer in plain language, at most a few sentences. If you list multiple items, format them as a Markdown list with each item on its own line.";
     const userPrompt =
       type === "explain"
         ? `Your context:\n${context}\n\nIn 2-3 sentences, explain how you could pursue this grant idea:\n"${idea}"`
@@ -1353,7 +1353,7 @@ app.post("/api/ask", async (req, res) => {
     }
 
     const systemPrompt =
-      "You are a helpful assistant for a UVU faculty member writing a teaching-with-AI grant proposal. Address them directly as \"you\" — never \"the instructor\" or \"the faculty\". Answer clearly and concisely in plain language. If they ask for help or suggestions, offer concrete options they can pick from. Be specific to the context given.";
+      "You are a helpful assistant for a UVU faculty member writing a teaching-with-AI grant proposal. Address them directly as \"you\" — never \"the instructor\" or \"the faculty\". Answer clearly and concisely in plain language. If they ask for help or suggestions, offer concrete options they can pick from. When you list multiple items, format them as a Markdown list with each item on its own line (start each line with \"- \" or \"1.\"). Be specific to the context given.";
     const userPrompt = `${contextLines.length ? contextLines.join("\n") + "\n\n" : ""}Message: ${question}`;
 
     let answer = "";

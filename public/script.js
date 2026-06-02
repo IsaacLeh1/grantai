@@ -503,11 +503,21 @@ if (syllabusUpload) {
   });
 }
 
+// Models often return lists inline ("...options: 1. A 2. B 3. C"). Put each
+// numbered/bulleted item on its own line so Markdown renders a vertical list.
+function normalizeListsToMarkdown(text) {
+  let t = String(text || '');
+  t = t.replace(/([^\n])\s+(\d{1,2}\.\s)/g, '$1\n$2');
+  t = t.replace(/([^\n])\s+([-•]\s)/g, '$1\n$2');
+  return t;
+}
+
 function appendAgentMessage(text) {
   const div = document.createElement('div');
   div.className = 'agent-msg bot';
-  // Create bot message container. Keep content as HTML if markdown is available.
-  div.innerHTML = text;
+  // Render Markdown (incl. lists) when available; otherwise show the raw text/HTML.
+  const md = normalizeListsToMarkdown(text);
+  div.innerHTML = window.marked ? marked.parse(md) : md;
   conversationLog.push({ role: 'assistant', content: div.textContent || String(text) });
   agentMessages.appendChild(div);
   agentChat.scrollTop = agentChat.scrollHeight;
