@@ -363,9 +363,13 @@ let selectedIdeaText = '';
 async function askClarification(question) {
   appendAgentMessage('Thinking…');
   const focus = (agentAnswers.find((a) => (a.question || '').toLowerCase().includes('assignment')) || {}).answer || '';
+  const currentQuestion = (!agentDone && currentQuestionIndex < agentQuestions.length)
+    ? agentQuestions[currentQuestionIndex]
+    : '';
   const context = {
     course: detectedCourse,
     assignment: focus,
+    currentQuestion,
     answers: agentAnswers.map((a) => ({ q: a.question, a: a.answer }))
   };
   try {
@@ -570,7 +574,11 @@ function looksLikeQuestion(text) {
   const t = (text || '').trim().toLowerCase();
   if (!t) return false;
   if (t.endsWith('?')) return true;
-  return /^(what|why|how|who|which|can you|could you|would you|do you|does|is it|are there|tell me|explain|elaborate|give me|show me|what about|what if|whats|i have a question|help me understand)\b/.test(t);
+  // Starts like a question.
+  if (/^(what|why|how|who|which|can you|could you|would you|do you|does|is it|are there|tell me|explain|elaborate|give me|show me|what about|what if|whats|i have a question|help me understand)\b/.test(t)) return true;
+  // Asks for help / suggestions / expresses uncertainty anywhere in the message.
+  if (/(give me (some )?(suggestions|ideas|examples|options)|some (suggestions|ideas|examples)|any (suggestions|ideas|examples)|\bsuggestions\b|suggest (some|an|a|me)|i don'?t know|\bidk\b|not sure|no idea|like what|for example|help me|what should i|give me options)/.test(t)) return true;
+  return false;
 }
 
 agentInputForm?.addEventListener('submit', async (e) => {

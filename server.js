@@ -1337,22 +1337,24 @@ app.post("/api/ask", async (req, res) => {
     const context = req.body?.context || {};
     const course = safe(context.course);
     const assignment = safe(context.assignment);
+    const currentQuestion = safe(context.currentQuestion);
     const answers = Array.isArray(context.answers) ? context.answers : [];
     const history = sanitizeHistory(req.body?.history);
 
     const contextLines = [];
     if (course) contextLines.push(`Course: ${course}`);
     if (assignment) contextLines.push(`Focused assignment: ${assignment}`);
+    if (currentQuestion) contextLines.push(`The question you are currently being asked is: "${currentQuestion}". If the message below asks for help, suggestions, examples, or says you don't know, give 2-4 concrete suggestions tailored to this question and context.`);
     if (answers.length) {
-      contextLines.push("Faculty answers so far:");
+      contextLines.push("Your answers so far:");
       answers.forEach((a) => {
         if (a && (a.q || a.a)) contextLines.push(`- ${safe(a.q)}: ${safe(a.a)}`);
       });
     }
 
     const systemPrompt =
-      "You are a helpful assistant for a UVU faculty member writing a teaching-with-AI grant proposal. Address them directly as \"you\" — never \"the instructor\" or \"the faculty\". Answer the question clearly and concisely in plain language (a short paragraph). If it relates to your proposal, be specific to the context given.";
-    const userPrompt = `${contextLines.length ? contextLines.join("\n") + "\n\n" : ""}Question: ${question}`;
+      "You are a helpful assistant for a UVU faculty member writing a teaching-with-AI grant proposal. Address them directly as \"you\" — never \"the instructor\" or \"the faculty\". Answer clearly and concisely in plain language. If they ask for help or suggestions, offer concrete options they can pick from. Be specific to the context given.";
+    const userPrompt = `${contextLines.length ? contextLines.join("\n") + "\n\n" : ""}Message: ${question}`;
 
     let answer = "";
     try {
