@@ -354,6 +354,35 @@ let awaitingImprovementsFollowup = false;
 let detectedAssignments = [];
 let detectedCourse = '';
 let lastImprovements = [];
+let agentDone = false;
+
+// Send a free-form question to the AI and display the answer in the chat.
+async function askClarification(question) {
+  appendAgentMessage('Thinking…');
+  const focus = (agentAnswers.find((a) => (a.question || '').toLowerCase().includes('assignment')) || {}).answer || '';
+  const context = {
+    course: detectedCourse,
+    assignment: focus,
+    answers: agentAnswers.map((a) => ({ q: a.question, a: a.answer }))
+  };
+  try {
+    const res = await fetch('/api/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question, context })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.answer) {
+      appendAgentMessage(data.answer);
+    } else {
+      appendAgentMessage("I couldn't get an answer right now. Make sure the AI (Ollama) is running and try again.");
+    }
+  } catch (err) {
+    console.error('ask failed:', err);
+    appendAgentMessage("I couldn't reach the assistant. Make sure the server and Ollama are running.");
+  }
+  agentChat.scrollTop = agentChat.scrollHeight;
+}
 
 // Render the assignments the server extracted from the uploaded syllabus.
 // Returns true if at least one assignment was found.
@@ -504,6 +533,11 @@ function startAgent() {
   agentMessages.innerHTML = '';
   agentAnswers = [];
   currentQuestionIndex = 0;
+  agentDone = false;
+  awaitingImprovementsFollowup = false;
+  detectedAssignments = [];
+  detectedCourse = '';
+  lastImprovements = [];
   // Intro message: require syllabus
   showQuestion(currentQuestionIndex);
 }
@@ -539,6 +573,14 @@ agentInputForm?.addEventListener('submit', async (e) => {
     agentTextInput.value = '';
     // clear the awaiting flag (unless we re-enter later)
     awaitingImprovementsFollowup = false;
+
+    // A clarifying question here is answered by the AI; stay on the improvements step.
+    if (rawReply.endsWith('?')) {
+      await askClarification(rawReply);
+      appendAgentMessage('Would you like to learn more about any of these? Name the number or say "no".');
+      awaitingImprovementsFollowup = true;
+      return;
+    }
 
     const reply = rawReply.toLowerCase();
     if (reply === 'no') {
@@ -617,6 +659,24 @@ agentInputForm?.addEventListener('submit', async (e) => {
   const text = agentTextInput.value.trim();
   if (!text) return;
 
+  // Once the guided questions are done, every message is a free-form question to the AI.
+  if (agentDone) {
+    appendUserMessage(text);
+    agentTextInput.value = '';
+    await askClarification(text);
+    return;
+  }
+
+  // A clarifying question mid-flow ("...?") is answered by the AI without consuming the step.
+  if (text.endsWith('?')) {
+    appendUserMessage(text);
+    agentTextInput.value = '';
+    await askClarification(text);
+    appendAgentMessage('Now, back to the question:');
+    showQuestion(currentQuestionIndex);
+    return;
+  }
+
   // At the assignments question, let the user pick a listed assignment by number.
   let answerText = text;
   let pickedFromList = false;
@@ -684,7 +744,8 @@ agentInputForm?.addEventListener('submit', async (e) => {
   if (currentQuestionIndex < agentQuestions.length) {
     showQuestion(currentQuestionIndex);
   } else {
-    appendAgentMessage('All questions complete. When ready, click "I\'m Satisfied (Next Agent)" to review a summary and choose proposal options.');
+    agentDone = true;
+    appendAgentMessage('All questions complete. When ready, click "I\'m Satisfied (Next Agent)" to review a summary and choose proposal options. You can also ask me any question here and I\'ll answer.');
     if (agentSatisfiedBtn) {
       agentSatisfiedBtn.classList.add('ready');
     }
