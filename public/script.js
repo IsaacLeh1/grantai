@@ -564,6 +564,15 @@ function showQuestion(idx) {
   }
 }
 
+// Heuristic: is this message a question/clarification rather than a direct answer?
+// Catches "?" plus common question phrasings that lack a question mark.
+function looksLikeQuestion(text) {
+  const t = (text || '').trim().toLowerCase();
+  if (!t) return false;
+  if (t.endsWith('?')) return true;
+  return /^(what|why|how|who|which|can you|could you|would you|do you|does|is it|are there|tell me|explain|elaborate|give me|show me|what about|what if|whats|i have a question|help me understand)\b/.test(t);
+}
+
 agentInputForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
 
@@ -580,25 +589,21 @@ agentInputForm?.addEventListener('submit', async (e) => {
     // clear the awaiting flag (unless we re-enter later)
     awaitingImprovementsFollowup = false;
 
-    // A clarifying question here is answered by the AI; stay on the improvements step.
-    if (rawReply.endsWith('?')) {
-      await askClarification(rawReply);
-      appendAgentMessage('Would you like to learn more about any of these? Name the number or say "no".');
-      awaitingImprovementsFollowup = true;
-      return;
-    }
-
     const reply = rawReply.toLowerCase();
-    if (reply === 'no') {
+
+    // Explicit "move on" intent advances to the next question.
+    if (/^(no|nope|no thanks|continue|move on|next|done|skip|that'?s all|i'?m good|im good)\b/.test(reply)) {
       appendAgentMessage('Okay — moving on to the next question.');
       currentQuestionIndex++;
       showQuestion(currentQuestionIndex);
       return;
     }
 
-    // If user provided a number (or comma-separated numbers), expand each with AI detail.
-    const picks = reply.split(/[,\s]+/).map((s) => Number(s)).filter((n) => Number.isFinite(n) && n >= 1);
-    if (picks.length) {
+    // A bare number (or list of numbers) expands those ideas with AI detail.
+    const tokens = reply.split(/[,\s]+/).filter(Boolean);
+    const picks = tokens.map((s) => Number(s)).filter((n) => Number.isFinite(n) && n >= 1);
+    const isPurePicks = picks.length > 0 && tokens.every((tok) => Number.isFinite(Number(tok)));
+    if (isPurePicks) {
       const focus = (agentAnswers.find((a) => (a.question || '').toLowerCase().includes('assignment')) || {}).answer || '';
       for (const p of picks.slice(0, 4)) {
         const idx = Math.max(0, p - 1);
@@ -620,15 +625,15 @@ agentInputForm?.addEventListener('submit', async (e) => {
           appendAgentMessage('I couldn\'t get more detail right now. Please try again.');
         }
       }
-      appendAgentMessage('Would you like more details on another option, or shall we continue? (say a number or "no")');
-      // stay in this follow-up state to allow multiple picks
+      appendAgentMessage('Want more on any of these (give a number), ask another question, or say "no" to continue.');
       awaitingImprovementsFollowup = true;
       return;
     }
 
-    // fallback: advance if nothing matched
-    currentQuestionIndex++;
-    showQuestion(currentQuestionIndex);
+    // Anything else (a question or conversational message) is answered in context.
+    await askClarification(rawReply);
+    appendAgentMessage('Want more on any of these (give a number), ask another question, or say "no" to continue.');
+    awaitingImprovementsFollowup = true;
     return;
   }
 
@@ -686,8 +691,8 @@ agentInputForm?.addEventListener('submit', async (e) => {
     return;
   }
 
-  // A clarifying question mid-flow ("...?") is answered by the AI without consuming the step.
-  if (text.endsWith('?')) {
+  // A clarifying question mid-flow is answered by the AI without consuming the step.
+  if (looksLikeQuestion(text)) {
     appendUserMessage(text);
     agentTextInput.value = '';
     await askClarification(text);
