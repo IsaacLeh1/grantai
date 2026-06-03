@@ -261,7 +261,7 @@ h3 {
   display: none;
 }
 .agent-messages { display:flex; flex-direction:column; gap:10px; }
-.agent-msg { padding:8px 10px; margin:6px 0; border-radius:6px; }
+.agent-msg { padding:8px 10px; margin:6px 0; border-radius:6px; font-size:1.05rem; line-height:1.5; }
 .agent-msg.bot { background:#f1f5f9; color:#0f172a; }
 .agent-msg.user { background:#dbeafe; color:#0b1220; text-align:right; }
 .agent-msg.bot { display: flex; align-items: center; gap: 0.6rem; }
@@ -728,6 +728,8 @@ select {
   border-radius: 10px;
   padding: 0.55rem;
   margin-bottom: 0.5rem;
+  font-size: 1.05rem;
+  line-height: 1.5;
 }
 
 .msg.user {
