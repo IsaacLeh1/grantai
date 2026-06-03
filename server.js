@@ -870,8 +870,8 @@ app.post("/api/software-chat", async (req, res) => {
     const course = safe(req.body?.course);
     const idea = safe(req.body?.idea);
 
-    const systemPrompt = "You are a software advisor for a faculty member's grant proposal. Address them directly as \"you\" — never \"the instructor\" or \"the faculty\". Recommend from the provided list only. Be specific and concise.";
-    const userPrompt = `Available software:\n${JSON.stringify(software, null, 2)}\n\nUser question: ${message}\nCourse context: ${course}\nIdea context: ${idea}\n\nReturn: 1) Top 2 recommendations and why, 2) cost notes, 3) next step for procurement or trial.`;
+    const systemPrompt = "You are a software advisor for a faculty member's grant proposal. Address them directly as \"you\" — never \"the instructor\" or \"the faculty\". Prioritize recommendations from the provided list of institution-supported software (these are already available on our network). If nothing on the list fits their need well, you may also suggest other software outside our network, but clearly label those as \"not currently supported on our network\" and note they would require separate procurement/DX approval. Be specific and concise.";
+    const userPrompt = `Institution-supported software (available on our network):\n${JSON.stringify(software, null, 2)}\n\nUser question: ${message}\nCourse context: ${course}\nIdea context: ${idea}\n\nReturn: 1) Top 2 recommendations (prefer the supported list; only suggest outside software if nothing fits, clearly labeled as off-network), 2) supported platforms or access notes, 3) next step for procurement or trial.`;
 
     let text = "";
     try {
@@ -883,15 +883,18 @@ app.post("/api/software-chat", async (req, res) => {
     if (!text) {
       const normalized = message.toLowerCase();
       const matches = software.filter((item) => {
-        const haystack = `${item.name} ${item.category} ${item.bestFor.join(" ")} ${item.notes}`.toLowerCase();
+        const platforms = Array.isArray(item.platforms) ? item.platforms.join(" ") : "";
+        const haystack = `${item.name} ${item.category} ${platforms}`.toLowerCase();
         return normalized.split(/\s+/).some((token) => token.length > 3 && haystack.includes(token));
       });
 
       const picks = (matches.length ? matches : software.slice(0, 2)).slice(0, 2);
       text = picks
         .map(
-          (p, idx) =>
-            `${idx + 1}. **${p.name}** (${p.category})\n- Why: Best for ${p.bestFor.join(", ")}.\n- Cost: ${p.costModel}.\n- Next step: Request campus access and test in one assignment module.`
+          (p, idx) => {
+            const platforms = Array.isArray(p.platforms) && p.platforms.length ? p.platforms.join(", ") : "N/A";
+            return `${idx + 1}. **${p.name}** (${p.category})\n- Platforms: ${platforms}.\n- Next step: Request campus access and test in one assignment module.`;
+          }
         )
         .join("\n\n");
     }

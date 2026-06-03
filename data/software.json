@@ -1,58 +1,117 @@
 [
   {
-    "name": "Canvas Studio",
-    "category": "Video and feedback",
-    "bestFor": ["video annotation", "flipped classroom", "multimodal feedback"],
-    "costModel": "Campus license often available",
-    "notes": "Good for interactive video assignments and instructor comments."
+    "name": "Adobe",
+    "category": "Design and Development",
+    "platforms": ["Windows 10", "OS X", "iOS", "Android", "Citrix Virtual Lab"]
   },
   {
-    "name": "Perusall",
-    "category": "Social annotation",
-    "bestFor": ["reading engagement", "peer discussion", "low-stakes assessment"],
-    "costModel": "Institutional or course-level",
-    "notes": "Useful for collaborative reading and engagement analytics."
+    "name": "Alertus",
+    "category": "Emergency Alerts",
+    "platforms": ["Windows 10", "OS X"]
   },
   {
-    "name": "Gradescope",
-    "category": "Assessment workflow",
-    "bestFor": ["rubric grading", "large sections", "assignment feedback"],
-    "costModel": "Institutional agreement",
-    "notes": "Speeds grading while preserving rubric consistency."
+    "name": "ChatGPT",
+    "category": "Artificial Intelligence",
+    "platforms": ["Windows 10", "OS X", "iOS", "Android"]
   },
   {
-    "name": "Miro",
-    "category": "Collaboration and ideation",
-    "bestFor": ["design thinking", "group mapping", "project planning"],
-    "costModel": "Education plans available",
-    "notes": "Strong for visual collaboration and interactive activities."
+    "name": "Cisco Anyconnect",
+    "category": "Security",
+    "platforms": ["Windows 10", "OS X"]
   },
   {
-    "name": "Adobe Express",
-    "category": "Creative production",
-    "bestFor": ["digital storytelling", "infographics", "media projects"],
-    "costModel": "Education licenses available",
-    "notes": "Student-friendly tool for media-rich assignments."
+    "name": "Citrix",
+    "category": "Virtualization",
+    "platforms": ["Windows 10", "OS X", "iOS", "Android"]
   },
   {
-    "name": "Otter.ai",
-    "category": "Accessibility and transcription",
-    "bestFor": ["lecture transcription", "meeting notes", "accessibility support"],
-    "costModel": "Tiered subscriptions",
-    "notes": "Helpful for accessibility and searchable class artifacts."
+    "name": "Claude",
+    "category": "Artificial Intelligence",
+    "platforms": ["Windows 10", "OS X", "iOS", "Android"]
   },
   {
-    "name": "H5P",
-    "category": "Interactive content",
-    "bestFor": ["interactive quizzes", "branching scenarios", "self-paced learning"],
-    "costModel": "Open ecosystem",
-    "notes": "Builds reusable interactive content mapped to outcomes."
+    "name": "HID Mobile",
+    "category": "Security",
+    "platforms": ["iOS", "Android"]
   },
   {
-    "name": "Tableau",
-    "category": "Data visualization",
-    "bestFor": ["data literacy", "project dashboards", "assessment analytics"],
-    "costModel": "Academic licensing available",
-    "notes": "Supports authentic data assignments and evidence reporting."
+    "name": "Lucid Chart",
+    "category": "Diagramming and Flowcharts",
+    "platforms": ["Windows 10", "OS X", "iOS", "Android", "Citrix Virtual Lab"]
+  },
+  {
+    "name": "Mathematica",
+    "category": "Mathematics and graphing",
+    "platforms": ["Windows 10", "OS X", "Citrix Virtual Lab"]
+  },
+  {
+    "name": "Microsoft Copilot",
+    "category": "Artificial Intelligence",
+    "platforms": ["Windows 10", "OS X", "iOS", "Android", "Citrix Virtual Lab"]
+  },
+  {
+    "name": "Microsoft Office 365",
+    "category": "Productivity and Business",
+    "platforms": ["Windows 10", "OS X", "iOS", "Citrix Virtual Lab"]
+  },
+  {
+    "name": "Microsoft OneDrive",
+    "category": "Cloud Storage",
+    "platforms": ["Windows 10", "OS X", "iOS", "Android"]
+  },
+  {
+    "name": "Microsoft Outlook Mobile",
+    "category": "Communication",
+    "platforms": ["iOS", "Android"]
+  },
+  {
+    "name": "Microsoft Project",
+    "category": "Project Management",
+    "platforms": ["Windows 10"]
+  },
+  {
+    "name": "Microsoft Teams",
+    "category": "Communication",
+    "platforms": ["Windows 10", "OS X", "iOS", "Android"]
+  },
+  {
+    "name": "Microsoft Visio",
+    "category": "Diagramming and Flowcharts",
+    "platforms": ["Windows 10"]
+  },
+  {
+    "name": "NVivo",
+    "category": "Data Analysis",
+    "platforms": ["Windows 10", "OS X", "iOS", "Citrix Virtual Lab"]
+  },
+  {
+    "name": "Qualtrics",
+    "category": "Survey Tools",
+    "platforms": ["Windows 10", "OS X", "iOS", "Android"]
+  },
+  {
+    "name": "Respondus Lockdown Browser",
+    "category": "Instructional Technology",
+    "platforms": ["Windows 10", "OS X"]
+  },
+  {
+    "name": "SAS",
+    "category": "Statistical Analysis",
+    "platforms": ["Windows 10"]
+  },
+  {
+    "name": "Spirion",
+    "category": "Security",
+    "platforms": ["Windows 10", "OS X"]
+  },
+  {
+    "name": "SPSS",
+    "category": "Statistical and Mathematical",
+    "platforms": ["Windows 10", "OS X"]
+  },
+  {
+    "name": "STATA",
+    "category": "Statistical and Mathematical",
+    "platforms": []
   }
 ]
