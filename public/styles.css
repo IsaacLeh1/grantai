@@ -80,10 +80,10 @@ h3 {
   background-color: #fff;
   background-image: linear-gradient(
     135deg,
-    transparent 55%,
-    rgba(18, 76, 53, 0.16) 55%,
-    rgba(18, 76, 53, 0.16) 71%,
-    transparent 71%
+    transparent 48.5%,
+    rgba(18, 76, 53, 0.16) 48.5%,
+    rgba(18, 76, 53, 0.16) 64.5%,
+    transparent 64.5%
   );
   background-repeat: no-repeat;
   padding: 0.8rem 1rem;
