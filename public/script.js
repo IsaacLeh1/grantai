@@ -214,7 +214,8 @@ async function loadSoftware() {
   softwareList.innerHTML = "";
   softwareCache.forEach((item) => {
     const li = document.createElement("li");
-    li.innerHTML = `<strong>${item.name}</strong> - ${item.category}<br>${item.notes}<br><em>${item.costModel}</em>`;
+    const platforms = Array.isArray(item.platforms) && item.platforms.length ? item.platforms.join(", ") : "N/A";
+    li.innerHTML = `<strong>${item.name}</strong> - ${item.category}<br><em>Platforms: ${platforms}</em>`;
     softwareList.appendChild(li);
   });
 }
