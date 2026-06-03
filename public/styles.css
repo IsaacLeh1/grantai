@@ -20,7 +20,15 @@ html,
 body {
   margin: 0;
   padding: 0;
-  background: var(--paper);
+  background-color: var(--paper);
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(45, 139, 87, 0.08) 0,
+    rgba(45, 139, 87, 0.08) 18px,
+    transparent 18px,
+    transparent 54px
+  );
+  background-attachment: fixed;
   color: var(--ink);
   font-size: 18px;
   font-family: "Space Grotesk", sans-serif;
@@ -68,7 +76,14 @@ h3 {
   right: 0;
   width: min(48%, 450px);
   max-width: 450px;
-  background: #fff;
+  background-color: #fff;
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(18, 76, 53, 0.16) 0,
+    rgba(18, 76, 53, 0.16) 18px,
+    transparent 18px,
+    transparent 54px
+  );
   padding: 0.8rem 1rem;
   border-bottom: 10px solid #d0d0d0;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
